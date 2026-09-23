@@ -167,12 +167,14 @@ def root():
 
 
 @app.get("/api/routes", response_model=List[Dict[str, Any]])
+@app.get("/routes", response_model=List[Dict[str, Any]])
 def get_routes():
     """List all available routes."""
     return list_all_available_routes()
 
 
 @app.get("/api/ports")
+@app.get("/ports")
 def get_ports():
     """Get all port specifications including physical clearances (Draft, LOA, Beam)."""
     return {
@@ -182,12 +184,14 @@ def get_ports():
 
 
 @app.get("/api/vessels")
+@app.get("/vessels")
 def get_vessels():
     """Get all vessel class specifications (Capesize, Panamax, Supramax, Handysize)."""
     return VESSEL_CLASSES
 
 
 @app.get("/api/market/latest", response_model=MarketDataResponse)
+@app.get("/market/latest", response_model=MarketDataResponse)
 def get_latest_market_data():
     """Get latest live market indicators."""
     live = get_live_market_data()
@@ -208,6 +212,7 @@ def get_latest_market_data():
 
 
 @app.get("/api/market/history")
+@app.get("/market/history")
 def get_market_history(days: int = 90):
     """Get historical market data."""
     history = market_data.tail(days).to_dict(orient='records')
@@ -278,6 +283,7 @@ def compute_contract_strategy(predicted_rate: float, current_spot: float, foreca
 
 
 @app.post("/api/forecast", response_model=ForecastResponse)
+@app.post("/forecast", response_model=ForecastResponse)
 def forecast_freight_rate(request: ForecastRequest):
     """Generate freight rate forecast for a specific route with full clearance and contract strategy."""
     try:
@@ -449,6 +455,8 @@ def forecast_freight_rate(request: ForecastRequest):
 
 @app.get("/api/forecast/2026-predictions")
 @app.get("/api/forecast/2025-predictions")
+@app.get("/forecast/2026-predictions")
+@app.get("/forecast/2025-predictions")
 def get_2026_predictions():
     """
     Get full-year 2026 monthly freight rate predictions across all major routes
@@ -495,6 +503,7 @@ def get_2026_predictions():
 # ==========================================
 
 @app.post("/api/vessel/optimize")
+@app.post("/vessel/optimize")
 def optimize_vessel_selection(request: VesselOptimizationRequest):
     """
     Multi-Vessel Auto-Optimizer:
@@ -526,6 +535,7 @@ def optimize_vessel_selection(request: VesselOptimizationRequest):
 # ==========================================
 
 @app.get("/api/contract/strategy")
+@app.get("/contract/strategy")
 def get_contract_strategy(origin: str, destination: str, vessel_class: str, days: int = 30):
     """
     Get detailed Contract Duration & Timing Strategy (Spot vs 1-Month vs 3-Month COA).
@@ -550,6 +560,7 @@ def get_contract_strategy(origin: str, destination: str, vessel_class: str, days
 # ==========================================
 
 @app.post("/api/procurement/tender")
+@app.post("/procurement/tender")
 def generate_procurement_tender(request: ProcurementTenderRequest):
     """
     Generates a formal Charter Fixture & Procurement Tender Specification Sheet
@@ -582,6 +593,7 @@ def generate_procurement_tender(request: ProcurementTenderRequest):
 
 
 @app.get("/api/model/info")
+@app.get("/model/info")
 def get_model_info():
     """Get model performance metrics."""
     return {
@@ -603,6 +615,7 @@ def get_model_info():
 # ==========================================
 
 @app.get("/api/intelligence/briefing")
+@app.get("/intelligence/briefing")
 def get_intelligence_briefing(force: bool = False):
     """
     Get full AI maritime intelligence briefing and Black Swan risk assessment.
@@ -616,6 +629,7 @@ def get_intelligence_briefing(force: bool = False):
 
 
 @app.get("/api/intelligence/threat-level")
+@app.get("/intelligence/threat-level")
 def get_intelligence_threat_level():
     """
     Get summary threat level and Black Swan risk index for dashboard badge display.
@@ -638,6 +652,7 @@ def get_intelligence_threat_level():
 
 
 @app.post("/api/intelligence/refresh")
+@app.post("/intelligence/refresh")
 def refresh_intelligence():
     """
     Force re-fetching of live maritime feeds and execute fresh Gemini threat synthesis.
@@ -671,7 +686,15 @@ if FRONTEND_DIR:
     def serve_frontend_index():
         return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
-    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+    @app.get("/index.html")
+    def serve_frontend_index_html():
+        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+    for sub in ["css", "js", "assets", "data"]:
+        sub_path = os.path.join(FRONTEND_DIR, sub)
+        if os.path.exists(sub_path):
+            app.mount(f"/{sub}", StaticFiles(directory=sub_path), name=f"static_{sub}")
+
 
 
 
