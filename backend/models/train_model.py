@@ -1,12 +1,13 @@
 """
 Freight Rate Forecasting Model
 XGBoost-based ML model trained on real historical market data
+Supports both native XGBoost runtime and zero-dependency pure-NumPy tree evaluation.
 """
 
 import pandas as pd
 import numpy as np
-import xgboost as xgb
 import joblib
+import json
 from datetime import datetime, timedelta
 import warnings
 warnings.filterwarnings('ignore')
@@ -16,6 +17,8 @@ class FreightForecaster:
 
     def __init__(self):
         self.model = None
+        self.trees = None
+        self.base_score = 0.0
         self.feature_names = []
         self.target_col = 'capesize_rate_usd_mt'
         self.scaler_mean = None
@@ -65,8 +68,43 @@ class FreightForecaster:
 
         return df
 
+    def _predict_trees(self, X: pd.DataFrame) -> np.ndarray:
+        """Evaluate lightweight pure NumPy tree traversal with 100% mathematical fidelity."""
+        if self.trees is None:
+            raise ValueError("No trees loaded for prediction.")
+
+        preds = []
+        X_arr = X[self.feature_names].fillna(0).to_numpy(dtype=np.float32)
+        base_score = np.float32(self.base_score)
+
+        for row_idx in range(len(X_arr)):
+            row_vec = X_arr[row_idx]
+            total = base_score
+            for tree in self.trees:
+                left_children = tree['left_children']
+                right_children = tree['right_children']
+                split_indices = tree['split_indices']
+                split_conditions = np.array(tree['split_conditions'], dtype=np.float32)
+                default_left = tree['default_left']
+
+                node = 0
+                while left_children[node] != -1:
+                    feat_idx = split_indices[node]
+                    split_val = split_conditions[node]
+                    val = row_vec[feat_idx]
+                    if np.isnan(val):
+                        node = left_children[node] if default_left[node] == 1 else right_children[node]
+                    elif val < split_val:
+                        node = left_children[node]
+                    else:
+                        node = right_children[node]
+                total += split_conditions[node]
+            preds.append(float(total))
+        return np.array(preds)
+
     def train(self, data_path: str = "backend/data/freight_market_data.csv"):
         """Train the XGBoost model."""
+        import xgboost as xgb
         from sklearn.model_selection import train_test_split, TimeSeriesSplit
         from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
@@ -125,6 +163,20 @@ class FreightForecaster:
         )
         print("  ✓ Model trained successfully")
 
+        # Extract trees for lightweight portable prediction
+        try:
+            booster = self.model.get_booster()
+            dump = json.loads(booster.save_raw(raw_format='json'))
+            base_score_raw = dump['learner']['learner_model_param']['base_score'].strip('[]')
+            if 'E' in base_score_raw:
+                parts = base_score_raw.split('E')
+                self.base_score = float(parts[0]) * (10 ** float(parts[1]))
+            else:
+                self.base_score = float(base_score_raw)
+            self.trees = dump['learner']['gradient_booster']['model']['trees']
+        except Exception as e:
+            print(f"  ⚠ Note extracting trees: {e}")
+
         # Evaluate
         print("\nEvaluating model performance...")
         y_train_pred = self.model.predict(X_train)
@@ -172,8 +224,8 @@ class FreightForecaster:
 
     def predict(self, input_data: dict, history_df: pd.DataFrame = None) -> dict:
         """Make a forecast prediction."""
-        if self.model is None:
-            raise ValueError("Model not trained. Call train() first.")
+        if self.model is None and self.trees is None:
+            raise ValueError("Model not trained or loaded. Call train() or load_model() first.")
 
         if history_df is not None and not history_df.empty:
             # Append input to history to compute rolling and lag features properly
@@ -197,8 +249,13 @@ class FreightForecaster:
 
         X = latest_row[self.feature_names].fillna(0)
 
-        # Predict
-        prediction = self.model.predict(X)[0]
+        # Predict using model or pure tree traversal
+        if self.trees is not None:
+            prediction = self._predict_trees(X)[0]
+        elif self.model is not None:
+            prediction = self.model.predict(X)[0]
+        else:
+            raise ValueError("No prediction engine available.")
 
         # Calculate confidence interval (±10%)
         lower_bound = prediction * 0.90
@@ -213,26 +270,78 @@ class FreightForecaster:
 
     def save_model(self, path: str = "backend/models/saved_models/freight_model.pkl"):
         """Save trained model."""
-        if self.model is None:
+        if self.model is None and self.trees is None:
             raise ValueError("No model to save.")
 
         model_data = {
-            'model': self.model,
             'feature_names': self.feature_names,
             'target_col': self.target_col,
             'trained_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
+
+        if self.model is not None:
+            try:
+                booster = self.model.get_booster()
+                dump = json.loads(booster.save_raw(raw_format='json'))
+                base_score_raw = dump['learner']['learner_model_param']['base_score'].strip('[]')
+                if 'E' in base_score_raw:
+                    parts = base_score_raw.split('E')
+                    base_score = float(parts[0]) * (10 ** float(parts[1]))
+                else:
+                    base_score = float(base_score_raw)
+                model_data['base_score'] = base_score
+                model_data['trees'] = dump['learner']['gradient_booster']['model']['trees']
+            except Exception:
+                model_data['model'] = self.model
+        elif self.trees is not None:
+            model_data['base_score'] = self.base_score
+            model_data['trees'] = self.trees
+
         joblib.dump(model_data, path)
         print(f"\n✓ Model saved to: {path}")
 
     def load_model(self, path: str = "backend/models/saved_models/freight_model.pkl"):
         """Load a saved model."""
         model_data = joblib.load(path)
-        self.model = model_data['model']
         self.feature_names = model_data['feature_names']
         self.target_col = model_data['target_col']
+
+        if 'trees' in model_data:
+            self.trees = model_data['trees']
+            self.base_score = model_data.get('base_score', 0.0)
+            self.model = None
+        elif 'model' in model_data:
+            self.model = model_data['model']
+            try:
+                booster = self.model.get_booster()
+                dump = json.loads(booster.save_raw(raw_format='json'))
+                base_score_raw = dump['learner']['learner_model_param']['base_score'].strip('[]')
+                if 'E' in base_score_raw:
+                    parts = base_score_raw.split('E')
+                    self.base_score = float(parts[0]) * (10 ** float(parts[1]))
+                else:
+                    self.base_score = float(base_score_raw)
+                self.trees = dump['learner']['gradient_booster']['model']['trees']
+            except Exception:
+                pass
+
         print(f"✓ Model loaded from: {path}")
         print(f"  Trained: {model_data.get('trained_date', 'Unknown')}")
+
+
+if __name__ == "__main__":
+    # Train the model
+    forecaster = FreightForecaster()
+    metrics = forecaster.train()
+    forecaster.save_model()
+
+    print("\n" + "="*60)
+    print("MODEL TRAINING COMPLETE")
+    print("="*60)
+    print(f"Final Test MAE: ${metrics['test_mae']:.2f}/mt")
+    print(f"Final Test MAPE: {metrics['test_mape']:.2f}%")
+    print("Ready for deployment!")
+
 
 
 if __name__ == "__main__":
