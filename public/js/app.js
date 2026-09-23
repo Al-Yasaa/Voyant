@@ -1,9 +1,18 @@
 // Dynamic API Base URL
-// If frontend is served on port 8000 (FastAPI), use relative paths ('') to eliminate CORS/hostname issues.
-// Otherwise (e.g., port 3000, Live Server, file://), point directly to http://127.0.0.1:8000.
-const API_BASE = (window.location.protocol.startsWith('http') && window.location.port === '8000')
-    ? ''
-    : 'http://127.0.0.1:8000';
+// - When deployed on Vercel or any remote domain: use relative path '' (same-origin)
+// - When served from FastAPI directly: use relative path ''
+// - When running locally on a separate dev port (e.g. 3000/5500) or via file://: connect to http://127.0.0.1:8000
+const API_BASE = (function() {
+    if (typeof window === 'undefined') return '';
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (window.location.protocol === 'file:') {
+        return 'http://127.0.0.1:8000';
+    }
+    if (isLocalhost && window.location.port && window.location.port !== '8000') {
+        return `http://${window.location.hostname}:8000`;
+    }
+    return '';
+})();
 
 // Global state tracking
 let lastForecastResult = null;
