@@ -5,8 +5,6 @@ XGBoost-based ML model trained on real historical market data
 
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, TimeSeriesSplit
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import xgboost as xgb
 import joblib
 from datetime import datetime, timedelta
@@ -69,6 +67,9 @@ class FreightForecaster:
 
     def train(self, data_path: str = "backend/data/freight_market_data.csv"):
         """Train the XGBoost model."""
+        from sklearn.model_selection import train_test_split, TimeSeriesSplit
+        from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
         print("\n" + "="*60)
         print("TRAINING FREIGHT RATE FORECASTING MODEL")
         print("="*60 + "\n")
