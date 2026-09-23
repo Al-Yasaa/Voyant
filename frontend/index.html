@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voyant | Freight Rate Forecasting & Procurement Platform — Ministry of Steel</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <img src="assets/logo-white.png" alt="Voyant Logo" class="logo-image">
+                <div class="brand-text-block">
+                    <div class="brand-title-row">
+                        <span class="brand-name">Voyant</span>
+                        <span class="brand-divider">—</span>
+                        <h1 class="brand-title">Freight Rate Forecasting & Procurement Platform</h1>
+                    </div>
+                    <p class="subtitle">India East Coast Dry Bulk Hubs | Ministry of Steel, Govt. of India</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <span class="status-badge status-live">● LIVE</span>
+                <span id="lastUpdated">Updated: Loading...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container dashboard-container">
+            <div class="dashboard-layout">
+
+                <!-- Left Main Content Area (Scrolls) -->
+                <div class="dashboard-main">
+
+                    <!-- Market Overview Cards -->
+                    <section class="market-overview">
+                        <h2 class="section-title">Market Overview</h2>
+                        <div class="card-grid">
+                            <div class="metric-card">
+                                <div class="metric-icon">📊</div>
+                                <div class="metric-content">
+                                    <span class="metric-label">Baltic Dry Index</span>
+                                    <span class="metric-value" id="bdi-value">--</span>
+                                    <span class="metric-change positive" id="bdi-change">--</span>
+                                </div>
+                            </div>
+
+                            <div class="metric-card">
+                                <div class="metric-icon">⚓</div>
+                                <div class="metric-content">
+                                    <span class="metric-label">Capesize Rate</span>
+                                    <span class="metric-value" id="cape-rate">--</span>
+                                    <span class="metric-subtext">USD/MT</span>
+                                </div>
+                            </div>
+
+                            <div class="metric-card">
+                                <div class="metric-icon">🛢️</div>
+                                <div class="metric-content">
+                                    <span class="metric-label">Bunker VLSFO</span>
+                                    <span class="metric-value" id="bunker-price">--</span>
+                                    <span class="metric-subtext">USD/MT</span>
+                                </div>
+                            </div>
+
+                            <div class="metric-card">
+                                <div class="metric-icon">💱</div>
+                                <div class="metric-content">
+                                    <span class="metric-label">USD/INR</span>
+                                    <span class="metric-value" id="usd-inr">--</span>
+                                    <span class="metric-subtext">Exchange Rate</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 2026 Predictions Chart -->
+                    <section class="predictions-section">
+                        <div class="predictions-header">
+                            <div>
+                                <h2 class="section-title" style="margin-bottom: 4px;">2026 Freight Rate Trajectory</h2>
+                                <p class="predictions-subtitle">Model trained on 2006–2026 Baltic Dry Index & commodity data | Full-Year 2026 Multi-Route Forward Curve (Jan 26 – Dec 26)</p>
+                            </div>
+                            <div class="predictions-badges">
+                                <span class="pred-badge pred-badge-green">🎯 97.6% Accuracy (MAPE 2.35%)</span>
+                                <span class="pred-badge pred-badge-blue">R² Score: 91.7%</span>
+                                <span class="pred-badge pred-badge-purple">MAE: $0.67/MT</span>
+                            </div>
+                        </div>
+
+                        <div class="chart-controls">
+                            <div class="chart-route-filters" id="route-filters">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <div class="card chart-card">
+                            <canvas id="predictions-chart" height="105"></canvas>
+                        </div>
+
+                        <!-- Summary Stats -->
+                        <div class="pred-stats-grid" id="pred-stats-grid">
+                            <!-- Populated by JS -->
+                        </div>
+                    </section>
+
+                    <!-- Multi-Vessel Auto-Optimizer & Route Economics Comparison -->
+                    <section class="optimizer-section" id="vessel-optimizer-section">
+                        <div class="optimizer-header">
+                            <div class="intel-title-row">
+                                <span class="intel-badge-icon">⚙️</span>
+                                <div>
+                                    <h2 class="section-title" style="margin-bottom: 4px;">Multi-Vessel Auto-Optimizer & Cost Comparison</h2>
+                                    <p class="intel-subtitle">Automatic side-by-side evaluation of Capesize, Panamax, Supramax & Handysize for optimal landed cost and port clearance</p>
+                                </div>
+                            </div>
+                            <button id="run-optimizer-btn" class="optimizer-run-btn">
+                                <span>⚡ Re-Optimize Fleet</span>
+                            </button>
+                        </div>
+
+                        <div class="card optimizer-card">
+                            <div class="optimizer-summary-bar" id="optimizer-summary-bar">
+                                <div class="opt-badge-pill">
+                                    <span>Optimal Vessel:</span>
+                                    <strong id="opt-recommended-vessel" class="opt-highlight">Awaiting Route Selection</strong>
+                                </div>
+                                <div class="opt-badge-reason" id="opt-recommended-reason">
+                                    Select an Origin and Destination Port in the sidebar on the right to compare vessel classes.
+                                </div>
+                            </div>
+
+                            <div class="optimizer-table-wrapper">
+                                <table class="optimizer-table" id="optimizer-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Vessel Class</th>
+                                            <th>Capacity (MT)</th>
+                                            <th>Landed Freight ($/MT)</th>
+                                            <th>Voyage Days</th>
+                                            <th>Port Clearance</th>
+                                            <th>Total Cargo Budget</th>
+                                            <th>Recommendation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="optimizer-table-body">
+                                        <tr>
+                                            <td colspan="7" class="opt-empty-row">
+                                                <div class="opt-empty-state">
+                                                    <span class="opt-empty-icon">📍</span>
+                                                    <div class="opt-empty-content">
+                                                        <h4>No Route Selected</h4>
+                                                        <p>Select an <strong>Origin Port</strong> and <strong>Destination Port (India East Coast)</strong> in the Route Configuration panel on the right to evaluate vessel classes, port clearances, and landed costs.</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- AI Maritime Intelligence & Black Swan Advisory Section -->
+                    <section class="intelligence-section" id="maritime-intelligence">
+                        <div class="intelligence-header">
+                            <div>
+                                <div class="intel-title-row">
+                                    <span class="intel-badge-icon">🌐</span>
+                                    <h2 class="section-title" style="margin-bottom: 4px;">AI Maritime Intelligence & Black Swan Advisory</h2>
+                                </div>
+                                <p class="intel-subtitle">Real-time geopolitical disruption, canal chokepoint & supply shock intelligence analyzed by Google Gemini AI</p>
+                            </div>
+                            <div class="intelligence-controls">
+                                <div class="threat-badge-container">
+                                    <span class="threat-status-label">Global Fleet Threat:</span>
+                                    <span class="threat-badge threat-elevated" id="global-threat-badge">
+                                        <span class="threat-pulse"></span>
+                                        <span id="threat-badge-text">ELEVATED</span>
+                                    </span>
+                                </div>
+                                <button id="refresh-intel-btn" class="intel-refresh-btn" title="Fetch latest maritime RSS feeds & re-run Gemini AI analysis">
+                                    <span class="refresh-icon">🔄</span> Refresh Intel
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Executive Threat & Black Swan Gauge Overview -->
+                        <div class="intel-overview-grid">
+                            <!-- Black Swan Risk Meter Card -->
+                            <div class="card intel-metric-card">
+                                <div class="intel-card-header">
+                                    <span class="intel-card-title">Black Swan Risk Index</span>
+                                    <span class="intel-ai-tag">Gemini Synthesized</span>
+                                </div>
+                                <div class="risk-gauge-wrapper">
+                                    <div class="risk-gauge-score">
+                                        <span class="risk-score-value" id="risk-index-value">68</span>
+                                        <span class="risk-score-total">/100</span>
+                                    </div>
+                                    <div class="risk-meter-bar">
+                                        <div class="risk-meter-fill risk-fill-elevated" id="risk-meter-fill" style="width: 68%;"></div>
+                                    </div>
+                                    <div class="risk-meter-labels">
+                                        <span>0 (Normal)</span>
+                                        <span>50 (Elevated)</span>
+                                        <span>100 (Severe Crisis)</span>
+                                    </div>
+                                </div>
+                                <div class="risk-meter-meta">
+                                    <span id="intel-monitored-feeds">Feeds: gCaptain, Splash247, Hellenic</span>
+                                    <span id="intel-last-updated">Updated: Live</span>
+                                </div>
+                            </div>
+
+                            <!-- Executive Chartering Briefing Card -->
+                            <div class="card intel-summary-card">
+                                <div class="intel-card-header">
+                                    <span class="intel-card-title">Executive Chartering Briefing</span>
+                                    <span class="advisory-role-badge">Indian Steel Mills Advisory</span>
+                                </div>
+                                <p class="intel-summary-text" id="intel-executive-summary">
+                                    Loading AI maritime intelligence analysis...
+                                </p>
+                                <div class="intel-summary-footer">
+                                    <span class="intel-isolation-note">🔒 Advisory Layer: 100% Independent from Quantitative ML Rate Engine</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Event Filter Chips -->
+                        <div class="intel-filters-container">
+                            <span class="intel-filter-label">Filter Disruptions:</span>
+                            <div class="intel-filter-chips" id="intel-filter-chips">
+                                <button class="intel-chip active" data-category="ALL">All Alerts (<span id="count-all">0</span>)</button>
+                                <button class="intel-chip" data-category="CRITICAL">🚨 Critical (≥7) (<span id="count-critical">0</span>)</button>
+                                <button class="intel-chip" data-category="Canal & Chokepoint">⚓ Chokepoints & Canals (<span id="count-chokepoint">0</span>)</button>
+                                <button class="intel-chip" data-category="Geopolitical & War">🌍 Geopolitical & Security (<span id="count-geopolitical">0</span>)</button>
+                                <button class="intel-chip" data-category="Port & Labor">🏗️ Ports & Strikes (<span id="count-port">0</span>)</button>
+                                <button class="intel-chip" data-category="Weather & Climate">🌀 Extreme Weather (<span id="count-weather">0</span>)</button>
+                            </div>
+                        </div>
+
+                        <!-- Threat Cards Feed Grid -->
+                        <div class="intel-cards-grid" id="intel-cards-grid">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </section>
+                </div><!-- End .dashboard-main -->
+
+                <!-- Right Sidebar (Sticky / Permanently Visible) -->
+                <aside class="forecast-sidebar">
+                    <section class="forecast-section">
+                        <div class="forecast-sidebar-header">
+                            <h2 class="section-title forecast-main-title">🔮 Generate Forecast</h2>
+                            <span class="forecast-dock-badge">Live ML Panel</span>
+                        </div>
+
+                        <div class="forecast-container">
+                            <!-- Input Form -->
+                            <div class="forecast-inputs card">
+                                <h3>Route Configuration</h3>
+
+                                <div class="form-group">
+                                    <label for="origin">Origin Port</label>
+                                    <select id="origin" class="form-control">
+                                        <option value="">Select origin...</option>
+                                        <option value="Australia_HayPoint">Australia - Hay Point (Hard Coking Coal)</option>
+                                        <option value="Australia_PortHedland">Australia - Port Hedland (Iron Ore Fines)</option>
+                                        <option value="USA_HamptonRoads">USA - Hampton Roads (Met Coal)</option>
+                                        <option value="Mozambique_Maputo">Mozambique - Maputo (Coal)</option>
+                                        <option value="SouthAfrica_RichardsBay">South Africa - Richards Bay (Coal)</option>
+                                        <option value="Indonesia_Taboneo">Indonesia - Taboneo (Thermal Coal)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="destination">Destination Port (India East Coast)</label>
+                                    <select id="destination" class="form-control">
+                                        <option value="">Select destination...</option>
+                                        <option value="Paradip">Paradip (Odisha) - Deep Water (18.7m Draft)</option>
+                                        <option value="Dhamra">Dhamra (Odisha) - Mechanized (18.0m Draft)</option>
+                                        <option value="Visakhapatnam">Visakhapatnam (AP) - RINL Steel (16.5m Draft)</option>
+                                        <option value="Gangavaram">Gangavaram (AP) - Deepest Port (19.5m Draft)</option>
+                                        <option value="Gopalpur">Gopalpur (Odisha) - South Gateway (14.5m Draft)</option>
+                                        <option value="Sandheads_Sagar">Sandheads / Sagar Anchorage (18.0m Draft)</option>
+                                        <option value="Haldia">Haldia Dock (WB) - Riverine (9.1m Draft)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="vessel">Vessel Type</label>
+                                    <select id="vessel" class="form-control">
+                                        <option value="">Select vessel...</option>
+                                        <option value="Capesize">Capesize (150-210k DWT) - Bulk Titan</option>
+                                        <option value="Panamax">Panamax (70-85k DWT) - Versatile Mid-Bulk</option>
+                                        <option value="Supramax">Supramax (50-65k DWT) - Geared Carrier</option>
+                                        <option value="Handysize">Handysize (30-45k DWT) - Shallow Port Specialist</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="cargo">Cargo Volume (MT)</label>
+                                    <input type="number" id="cargo" class="form-control" value="170000" min="5000" max="300000" step="1000">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="forecast-days">Forecast Horizon</label>
+                                    <select id="forecast-days" class="form-control">
+                                        <option value="1">1 Day</option>
+                                        <option value="7" selected>7 Days (1 Week)</option>
+                                        <option value="30">30 Days (1 Month)</option>
+                                        <option value="90">90 Days (3 Months)</option>
+                                    </select>
+                                </div>
+
+                                <button id="forecast-btn" class="btn btn-primary">
+                                    <span class="btn-icon">🔮</span>
+                                    Generate Forecast
+                                </button>
+                            </div>
+
+                            <!-- Results Panel -->
+                            <div class="forecast-results card" id="results-panel" style="display: none;">
+                                <div class="result-header">
+                                    <h3>Forecast Results</h3>
+                                    <span id="result-route" class="result-route-badge"></span>
+                                </div>
+
+                                <!-- Decision Banner -->
+                                <div id="decision-banner" class="decision-banner"></div>
+
+                                <!-- Physical Port Clearance Status -->
+                                <div id="port-clearance-box" class="port-clearance-box">
+                                    <div class="clearance-header">
+                                        <span class="clearance-title">⚓ Physical Port Clearance</span>
+                                        <span id="clearance-overall-badge" class="clearance-badge badge-pass">PASSED</span>
+                                    </div>
+                                    <div class="clearance-metrics-row">
+                                        <div class="clearance-pill" id="clearance-draft-pill">
+                                            <span>Draft Clearance:</span>
+                                            <strong id="draft-clearance-val">+0.5m</strong>
+                                        </div>
+                                        <div class="clearance-pill" id="clearance-loa-pill">
+                                            <span>LOA Clearance:</span>
+                                            <strong id="loa-clearance-val">+5.0m</strong>
+                                        </div>
+                                        <div class="clearance-pill" id="clearance-beam-pill">
+                                            <span>Beam Clearance:</span>
+                                            <strong id="beam-clearance-val">+3.0m</strong>
+                                        </div>
+                                    </div>
+                                    <div id="clearance-warnings-list" class="clearance-warnings-list" style="display: none;"></div>
+                                </div>
+
+                                <!-- Contextual AI Maritime Intelligence Route Alert -->
+                                <div id="route-intel-alert" class="route-intel-alert" style="display: none;">
+                                    <span class="route-intel-icon">🌐</span>
+                                    <div class="route-intel-body">
+                                        <div class="route-intel-title-row">
+                                            <span class="route-intel-title">Corridor Threat Alert</span>
+                                            <span class="route-intel-badge" id="route-alert-badge">ELEVATED</span>
+                                        </div>
+                                        <p class="route-intel-text" id="route-alert-message">Active geopolitical / chokepoint alerts detected on this trade route.</p>
+                                        <span class="route-intel-action" id="route-alert-action"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Key Metrics -->
+                                <div class="result-metrics">
+                                    <div class="result-metric-box">
+                                        <span class="result-label">Predicted Rate</span>
+                                        <span class="result-value primary" id="predicted-rate">--</span>
+                                        <span class="result-unit">USD/MT</span>
+                                    </div>
+
+                                    <div class="result-metric-box">
+                                        <span class="result-label">Total Freight</span>
+                                        <span class="result-value" id="total-cost-usd">--</span>
+                                        <span class="result-unit">USD</span>
+                                    </div>
+
+                                    <div class="result-metric-box">
+                                        <span class="result-label">Total Cost</span>
+                                        <span class="result-value" id="total-cost-inr">--</span>
+                                        <span class="result-unit">₹ Crores</span>
+                                    </div>
+                                </div>
+
+                                <!-- Confidence Interval -->
+                                <div class="confidence-section">
+                                    <div class="confidence-header">
+                                        <div class="confidence-title">
+                                            <span class="conf-icon">🎯</span>
+                                            <strong>Forecast Range & Uncertainty</strong>
+                                        </div>
+                                        <span class="confidence-badge">97.6% Accuracy | 90% Confidence Interval</span>
+                                    </div>
+
+                                    <div class="confidence-visual-track">
+                                        <div class="conf-track-base"></div>
+                                        <div class="conf-track-range"></div>
+                                        <div class="conf-track-target" id="conf-target-marker" style="left: 50%;">
+                                            <div class="conf-needle-pin"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="confidence-scale-values">
+                                        <div class="conf-val-box conf-val-left">
+                                            <span class="conf-val-label">Lower (90%)</span>
+                                            <span class="conf-val-num" id="conf-low">--</span>
+                                        </div>
+                                        <div class="conf-val-box conf-val-center">
+                                            <span class="conf-val-label">Expected Rate</span>
+                                            <span class="conf-val-num conf-val-target" id="conf-mid">--</span>
+                                        </div>
+                                        <div class="conf-val-box conf-val-right">
+                                            <span class="conf-val-label">Upper (90%)</span>
+                                            <span class="conf-val-num" id="conf-high">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contract Timing Strategy Matrix -->
+                                <div class="contract-strategy-section" id="contract-strategy-section">
+                                    <div class="strategy-header">
+                                        <h4>📋 Chartering & Procurement Strategy</h4>
+                                        <span id="strategy-recommendation-badge" class="strategy-pill pill-green">LOCK TERM</span>
+                                    </div>
+                                    <p id="strategy-rationale-text" class="strategy-rationale-text">Analyzing market volatility and forward curve...</p>
+                                    <div class="strategy-cards-grid" id="strategy-cards-grid">
+                                        <!-- Populated by JS -->
+                                    </div>
+                                </div>
+
+                                <!-- Voyage Details -->
+                                <div class="voyage-details">
+                                    <h4>Voyage Economics</h4>
+                                    <div class="detail-grid">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Distance</span>
+                                            <span class="detail-value" id="voyage-distance">-- nm</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Sea Days</span>
+                                            <span class="detail-value" id="sea-days">-- days</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Port Days</span>
+                                            <span class="detail-value" id="port-days">-- days</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Total Voyage</span>
+                                            <span class="detail-value" id="total-days">-- days</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Fuel Cost</span>
+                                            <span class="detail-value" id="fuel-cost">$--</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Lighterage</span>
+                                            <span class="detail-value" id="lighterage">$--</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Savings Info -->
+                                <div id="savings-info" class="savings-info" style="display: none;">
+                                    <span class="savings-icon">💰</span>
+                                    <div>
+                                        <strong>Expected Savings</strong>
+                                        <p id="savings-text">--</p>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons: Procurement Tender Export -->
+                                <div class="tender-action-container">
+                                    <button id="open-tender-modal-btn" class="btn btn-tender">
+                                        <span>📑 Generate Procurement Tender Fixture</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </aside><!-- End .forecast-sidebar -->
+
+            </div><!-- End .dashboard-layout -->
+        </div><!-- End .dashboard-container -->
+    </main>
+
+    <!-- Procurement Tender Modal -->
+    <div id="tender-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-content tender-modal-content">
+            <div class="tender-modal-header">
+                <div class="tender-modal-title-area">
+                    <span class="tender-emblem">🏛️</span>
+                    <div>
+                        <h2>Government of India | Ministry of Steel</h2>
+                        <p class="tender-subtitle">Commercial Charter Fixture & Procurement Tender Specification</p>
+                    </div>
+                </div>
+                <div class="tender-modal-actions">
+                    <button id="print-tender-btn" class="btn btn-sm btn-outline">🖨️ Print / Save PDF</button>
+                    <button id="close-tender-btn" class="modal-close-btn">&times;</button>
+                </div>
+            </div>
+
+            <div class="tender-modal-body" id="tender-sheet-body">
+                <!-- Dynamically populated tender specification sheet -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 Ministry of Steel, Government of India | Voyant Enterprise Freight Forecasting & Procurement Platform v2.0</p>
+            <p class="footer-disclaimer">Powered by Machine Learning (XGBoost) & Google Gemini AI Intelligence | R² Score: 91.7% | MAE: $0.67/MT</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js?v=2.1.0"></script>
+</body>
+</html>
