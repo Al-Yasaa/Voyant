@@ -7,23 +7,24 @@
     },
     {
       "source": "/css/(.*)",
-      "destination": "/frontend/css/$1"
+      "destination": "/public/css/$1"
     },
     {
       "source": "/js/(.*)",
-      "destination": "/frontend/js/$1"
+      "destination": "/public/js/$1"
     },
     {
       "source": "/assets/(.*)",
-      "destination": "/frontend/assets/$1"
+      "destination": "/public/assets/$1"
     },
     {
       "source": "/data/(.*)",
-      "destination": "/frontend/data/$1"
+      "destination": "/public/data/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/frontend/index.html"
+      "source": "/",
+      "destination": "/public/index.html"
     }
   ]
 }
+

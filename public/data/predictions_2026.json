@@ -1,0 +1,127 @@
+{
+  "generated_at": "2026-09-21 01:19",
+  "training_period": "2006-01-01 to 2026-08-31",
+  "prediction_period": "2026-01-01 to 2026-12-01",
+  "forecast_year": 2026,
+  "model_accuracy": {
+    "mae": 0.67,
+    "mape": 2.35,
+    "r2": 0.917
+  },
+  "dates": [
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07",
+    "2026-08",
+    "2026-09",
+    "2026-10",
+    "2026-11",
+    "2026-12"
+  ],
+  "routes": {
+    "Australia-HP": {
+      "label": "Australia (Hay Point) \u2192 Paradip",
+      "origin": "Australia_HayPoint",
+      "destination": "Paradip",
+      "vessel": "Capesize",
+      "predicted_rates": [
+        38.62,
+        38.87,
+        39.11,
+        40.32,
+        40.37,
+        39.79,
+        38.74,
+        38.72,
+        38.98,
+        40.21,
+        40.35,
+        40.39
+      ]
+    },
+    "USA-HR": {
+      "label": "USA (Hampton Roads) \u2192 Paradip",
+      "origin": "USA_HamptonRoads",
+      "destination": "Paradip",
+      "vessel": "Capesize",
+      "predicted_rates": [
+        70.23,
+        70.68,
+        71.12,
+        73.31,
+        73.4,
+        72.35,
+        70.45,
+        70.41,
+        70.88,
+        73.11,
+        73.38,
+        73.45
+      ]
+    },
+    "Indonesia": {
+      "label": "Indonesia (Taboneo) \u2192 Paradip",
+      "origin": "Indonesia_Taboneo",
+      "destination": "Paradip",
+      "vessel": "Panamax",
+      "predicted_rates": [
+        14.18,
+        14.27,
+        14.36,
+        14.81,
+        14.82,
+        14.61,
+        14.23,
+        14.22,
+        14.31,
+        14.76,
+        14.82,
+        14.83
+      ]
+    },
+    "S.Africa": {
+      "label": "South Africa \u2192 Vizag",
+      "origin": "SouthAfrica_RichardsBay",
+      "destination": "Visakhapatnam",
+      "vessel": "Panamax",
+      "predicted_rates": [
+        28.53,
+        28.71,
+        28.89,
+        29.78,
+        29.82,
+        29.39,
+        28.62,
+        28.6,
+        28.79,
+        29.7,
+        29.81,
+        29.84
+      ]
+    },
+    "Mozambique": {
+      "label": "Mozambique \u2192 Haldia",
+      "origin": "Mozambique_Maputo",
+      "destination": "Haldia",
+      "vessel": "Supramax",
+      "predicted_rates": [
+        30.03,
+        30.19,
+        30.36,
+        31.16,
+        31.2,
+        30.81,
+        30.11,
+        30.09,
+        30.27,
+        31.09,
+        31.19,
+        31.21
+      ]
+    }
+  }
+}

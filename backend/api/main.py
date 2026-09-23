@@ -653,13 +653,26 @@ def refresh_intelligence():
 # ==========================================
 # FRONTEND STATIC FILES & DASHBOARD MOUNT
 # ==========================================
-FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "frontend"))
-if os.path.exists(FRONTEND_DIR):
+FRONTEND_DIR = None
+for candidate in [
+    os.path.join(BASE_DIR, "public"),
+    os.path.join(BASE_DIR, "frontend"),
+    os.path.join(PROJECT_ROOT, "public"),
+    os.path.join(PROJECT_ROOT, "frontend"),
+    os.path.join(os.getcwd(), "public"),
+    os.path.join(os.getcwd(), "frontend"),
+]:
+    if os.path.exists(candidate) and os.path.exists(os.path.join(candidate, "index.html")):
+        FRONTEND_DIR = candidate
+        break
+
+if FRONTEND_DIR:
     @app.get("/")
     def serve_frontend_index():
         return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+
 
 
 if __name__ == "__main__":
