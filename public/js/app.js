@@ -519,32 +519,32 @@ async function loadMarketData() {
         if (!response.ok) throw new Error('Failed to fetch market data');
 
         const data = await response.json();
-        if (bdiValue) bdiValue.textContent = (data.bdi || 2359).toLocaleString();
+        if (bdiValue) bdiValue.textContent = (data.bdi || 3473).toLocaleString();
 
         if (bdiChange) {
-            const chg = data.bdi_change_pct !== undefined ? data.bdi_change_pct : 2.4;
+            const chg = data.bdi_change_pct !== undefined ? data.bdi_change_pct : 1.2;
             const sign = chg >= 0 ? '+' : '';
             bdiChange.textContent = `${sign}${chg.toFixed(1)}%`;
             bdiChange.className = `metric-change ${chg >= 0 ? 'positive' : 'negative'}`;
         }
 
-        if (capeRate) capeRate.textContent = `$${(data.capesize_rate || 23.94).toFixed(2)}`;
-        if (bunkerPrice) bunkerPrice.textContent = `$${(data.bunker_vlsfo || 782.95).toFixed(2)}`;
+        if (capeRate) capeRate.textContent = `$${(data.capesize_rate || 29.80).toFixed(2)}`;
+        if (bunkerPrice) bunkerPrice.textContent = `$${(data.bunker_vlsfo || 836.20).toFixed(2)}`;
         if (usdInr) usdInr.textContent = `₹${(data.usd_inr || 95.86).toFixed(2)}`;
 
         if (lastUpdated) {
-            const timeStr = data.timestamp ? `Live (${data.timestamp})` : `Updated: ${data.date || '2026-09-21'}`;
+            const timeStr = data.timestamp ? `Live (${data.timestamp})` : `Updated: ${data.date || '2026-09-25'}`;
             lastUpdated.textContent = timeStr;
         }
 
     } catch (error) {
         console.error('Error loading market data:', error);
-        if (bdiValue) bdiValue.textContent = '2,359';
-        if (bdiChange) bdiChange.textContent = '+2.4%';
-        if (capeRate) capeRate.textContent = '$23.94';
-        if (bunkerPrice) bunkerPrice.textContent = '$782.95';
+        if (bdiValue) bdiValue.textContent = '3,473';
+        if (bdiChange) bdiChange.textContent = '+1.2%';
+        if (capeRate) capeRate.textContent = '$29.80';
+        if (bunkerPrice) bunkerPrice.textContent = '$836.20';
         if (usdInr) usdInr.textContent = '₹95.86';
-        if (lastUpdated) lastUpdated.textContent = 'Updated: 2026-09-21';
+        if (lastUpdated) lastUpdated.textContent = 'Updated: 2026-09-25';
     }
 
     if (!marketPollingInterval) {
