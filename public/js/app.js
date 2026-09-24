@@ -355,8 +355,10 @@ function renderNativeCanvasChart(canvas, data, routeFilter) {
     if (!ctx) return;
 
     const parent = canvas.parentElement;
-    const width = parent ? parent.clientWidth - 40 : 800;
-    const height = 280;
+    const isMobile = window.innerWidth < 640;
+    const isTiny = window.innerWidth < 420;
+    const width = parent ? Math.max(260, parent.clientWidth - (isMobile ? 10 : 30)) : 800;
+    const height = isMobile ? 240 : 280;
     const dpr = window.devicePixelRatio || 1;
 
     canvas.width = width * dpr;
@@ -365,10 +367,10 @@ function renderNativeCanvasChart(canvas, data, routeFilter) {
     canvas.style.height = `${height}px`;
     ctx.scale(dpr, dpr);
 
-    const padLeft = 65;
-    const padRight = 30;
-    const padTop = 35;
-    const padBottom = 45;
+    const padLeft = isMobile ? 44 : 65;
+    const padRight = isMobile ? 12 : 30;
+    const padTop = isMobile ? 24 : 35;
+    const padBottom = isMobile ? 32 : 45;
     const chartW = width - padLeft - padRight;
     const chartH = height - padTop - padBottom;
 
@@ -380,7 +382,7 @@ function renderNativeCanvasChart(canvas, data, routeFilter) {
         if (parts.length >= 2) {
             const y = parts[0].slice(-2);
             const m = parseInt(parts[1], 10);
-            return `${monthNames[m - 1]} ${y}`;
+            return isTiny ? `${monthNames[m - 1].slice(0, 1)}` : isMobile ? `${monthNames[m - 1]}` : `${monthNames[m - 1]} ${y}`;
         }
         return d;
     });
@@ -400,10 +402,10 @@ function renderNativeCanvasChart(canvas, data, routeFilter) {
     ctx.strokeStyle = 'rgba(212, 226, 223, 0.7)';
     ctx.lineWidth = 1;
     ctx.fillStyle = '#4a6b63';
-    ctx.font = '600 11px Inter, sans-serif';
+    ctx.font = isMobile ? '600 10px Inter, sans-serif' : '600 11px Inter, sans-serif';
     ctx.textAlign = 'right';
 
-    const ySteps = 5;
+    const ySteps = isMobile ? 4 : 5;
     for (let i = 0; i <= ySteps; i++) {
         const yVal = minVal + (valRange * i) / ySteps;
         const yPos = padTop + chartH - (chartH * i) / ySteps;
@@ -413,29 +415,31 @@ function renderNativeCanvasChart(canvas, data, routeFilter) {
         ctx.lineTo(padLeft + chartW, yPos);
         ctx.stroke();
 
-        ctx.fillText(`$${Math.round(yVal)}`, padLeft - 8, yPos + 4);
+        ctx.fillText(`$${Math.round(yVal)}`, padLeft - (isMobile ? 4 : 8), yPos + 4);
     }
 
-    // Y Axis Title
-    ctx.save();
-    ctx.translate(16, padTop + chartH / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#0a4c39';
-    ctx.font = '700 11px Inter, sans-serif';
-    ctx.fillText('Freight Rate (USD / MT)', 0, 0);
-    ctx.restore();
+    // Y Axis Title (Desktop / Tablet only)
+    if (!isMobile) {
+        ctx.save();
+        ctx.translate(16, padTop + chartH / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#0a4c39';
+        ctx.font = '700 11px Inter, sans-serif';
+        ctx.fillText('Freight Rate (USD / MT)', 0, 0);
+        ctx.restore();
+    }
 
     // X-axis labels
     const numPoints = monthLabels.length;
     const xStep = chartW / (numPoints - 1);
     ctx.textAlign = 'center';
     ctx.fillStyle = '#4a6b63';
-    ctx.font = '600 11px Inter, sans-serif';
+    ctx.font = isMobile ? '600 9.5px Inter, sans-serif' : '600 11px Inter, sans-serif';
 
     for (let i = 0; i < numPoints; i++) {
         const xPos = padLeft + i * xStep;
-        ctx.fillText(monthLabels[i], xPos, padTop + chartH + 20);
+        ctx.fillText(monthLabels[i], xPos, padTop + chartH + (isMobile ? 16 : 20));
     }
 
     // Draw Routes
@@ -468,16 +472,16 @@ function renderNativeCanvasChart(canvas, data, routeFilter) {
             ctx.lineTo(points[i].x, points[i].y);
         }
         ctx.strokeStyle = color.border;
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = isMobile ? 2 : 2.5;
         ctx.stroke();
 
         // Points
         points.forEach((pt) => {
             ctx.beginPath();
-            ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+            ctx.arc(pt.x, pt.y, isMobile ? 3 : 4, 0, Math.PI * 2);
             ctx.fillStyle = '#ffffff';
             ctx.fill();
-            ctx.lineWidth = 2;
+            ctx.lineWidth = isMobile ? 1.5 : 2;
             ctx.strokeStyle = color.border;
             ctx.stroke();
         });
@@ -1078,6 +1082,17 @@ function setupEventListeners() {
 
     originSelect.addEventListener('change', () => {
         loadVesselOptimization(originSelect.value, destinationSelect.value, parseFloat(cargoInput.value));
+    });
+
+    // Debounced window resize listener for seamless responsive charts
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (allPredictionsData) {
+                renderChart(allPredictionsData, activeRouteKey);
+            }
+        }, 200);
     });
 }
 
