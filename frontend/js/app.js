@@ -108,7 +108,7 @@ let activeRouteKey = 'ALL';
 
 // Initialize reliably across all browser execution environments
 function initializeApp() {
-    console.log(`🚢 Freight Forecasting Platform v2.0 Initialized. API target: "${API_BASE || 'Same-Origin (/api)'}"`);
+    console.log(`Freight Forecasting Platform v2.0 Initialized. API target: "${API_BASE || 'Same-Origin (/api)'}"`);
     loadMarketData();
     loadPredictionsChart();
     loadMaritimeIntelligence();
@@ -568,7 +568,6 @@ function renderEmptyOptimizerPrompt(message) {
             <tr>
                 <td colspan="7" class="opt-empty-row">
                     <div class="opt-empty-state">
-                        <span class="opt-empty-icon">📍</span>
                         <div class="opt-empty-content">
                             <h4>No Route Selected</h4>
                             <p>Select an <strong>Origin Port</strong> and <strong>Destination Port (India East Coast)</strong> in the Route Configuration panel on the right to evaluate vessel classes, port clearances, and landed costs.</p>
@@ -639,16 +638,16 @@ function renderOptimizerResults(data) {
         // Clearance badge
         let clearanceHtml = '';
         if (opt.port_clearance_status === 'PASSED') {
-            clearanceHtml = `<span class="opt-clearance-ok">✓ Cleared (${opt.destination_max_draft_m}m Draft)</span>`;
+            clearanceHtml = `<span class="opt-clearance-ok">Cleared (${opt.destination_max_draft_m}m Draft)</span>`;
         } else if (opt.port_clearance_status === 'LIGHTERAGE_REQUIRED') {
-            clearanceHtml = `<span class="opt-clearance-warn">⚠️ Lighterage ($${opt.lighterage_cost_usd_mt}/t)</span>`;
+            clearanceHtml = `<span class="opt-clearance-warn">Lighterage ($${opt.lighterage_cost_usd_mt}/t)</span>`;
         } else {
-            clearanceHtml = `<span class="opt-clearance-fail">✕ Draft Exceeded</span>`;
+            clearanceHtml = `<span class="opt-clearance-fail">Draft Exceeded</span>`;
         }
 
         // Recommendation tag
         const tagHtml = isOptimal
-            ? `<span class="opt-best-badge">⭐ Best Landed Cost</span>`
+            ? `<span class="opt-best-badge">Best Landed Cost</span>`
             : `<span class="opt-secondary-badge">Rank #${opt.rank}</span>`;
 
         html += `
@@ -703,11 +702,11 @@ function renderClientFallbackOptimizer(orig, dest, vol) {
         const rowClass = opt.opt ? 'opt-row-optimal' : '';
 
         const clearHtml = opt.clear === 'PASSED'
-            ? `<span class="opt-clearance-ok">✓ Full Berth Clearance</span>`
-            : `<span class="opt-clearance-warn">⚠️ Lighterage ($${opt.light}/t)</span>`;
+            ? `<span class="opt-clearance-ok">Full Berth Clearance</span>`
+            : `<span class="opt-clearance-warn">Lighterage ($${opt.light}/t)</span>`;
 
         const tagHtml = opt.opt
-            ? `<span class="opt-best-badge">⭐ Best Landed Cost</span>`
+            ? `<span class="opt-best-badge">Best Landed Cost</span>`
             : `<span class="opt-secondary-badge">Rank #${opt.rank}</span>`;
 
         html += `
@@ -817,7 +816,7 @@ const FALLBACK_MARITIME_INTELLIGENCE = {
 async function loadMaritimeIntelligence(forceRefresh = false) {
     if (refreshIntelBtn) {
         refreshIntelBtn.disabled = true;
-        refreshIntelBtn.innerHTML = '<span class="refresh-icon" style="display:inline-block; animation:spin 1s infinite linear;">🔄</span> Analyzing...';
+        refreshIntelBtn.innerHTML = '<span class="refresh-icon" style="display:inline-block; animation:spin 1s infinite linear;">↻</span> Analyzing...';
     }
 
     try {
@@ -840,7 +839,7 @@ async function loadMaritimeIntelligence(forceRefresh = false) {
     } finally {
         if (refreshIntelBtn) {
             refreshIntelBtn.disabled = false;
-            refreshIntelBtn.innerHTML = '<span class="refresh-icon">🔄</span> Refresh Intel';
+            refreshIntelBtn.innerHTML = '<span class="refresh-icon">↻</span> Refresh Intel';
         }
     }
 }
@@ -921,7 +920,6 @@ function renderIntelligenceCards() {
     if (filtered.length === 0) {
         intelCardsGrid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: white; border-radius: 12px; border: 1px dashed var(--border); color: var(--gray);">
-                <span style="font-size: 32px; display: block; margin-bottom: 8px;">🚢</span>
                 <strong>No disruptions detected for this category.</strong>
                 <p style="font-size: 13px; margin-top: 4px;">Select another category or click "Refresh Intel" to pull live updates.</p>
             </div>
@@ -951,17 +949,17 @@ function renderIntelligenceCards() {
         }
 
         let impactClass = 'impact-neutral';
-        let impactText = '⚖️ Neutral Impact';
+        let impactText = 'Neutral Impact';
         const impact = (evt.impact_direction || '').toUpperCase();
         if (impact === 'BULLISH_FREIGHT' || impact === 'BULLISH') {
             impactClass = 'impact-bullish';
-            impactText = '📈 Bullish Freight Rates (Upward Pressure)';
+            impactText = 'Bullish Freight Rates (Upward Pressure)';
         } else if (impact === 'BEARISH_FREIGHT' || impact === 'BEARISH') {
             impactClass = 'impact-bearish';
-            impactText = '📉 Bearish Freight Rates';
+            impactText = 'Bearish Freight Rates';
         } else if (impact === 'TRANSIT_DELAY' || impact === 'DELAY') {
             impactClass = 'impact-delay';
-            impactText = '⏳ Transit Delay & Demurrage Risk';
+            impactText = 'Transit Delay & Demurrage Risk';
         }
 
         const routes = evt.affected_routes || [];
@@ -980,8 +978,8 @@ function renderIntelligenceCards() {
                     </h4>
 
                     <div class="intel-meta-row">
-                        <span>📰 ${evt.source || 'Maritime Feed'}</span>
-                        <span>📅 ${evt.published_date || 'Recent'}</span>
+                        <span>${evt.source || 'Maritime Feed'}</span>
+                        <span>${evt.published_date || 'Recent'}</span>
                     </div>
 
                     <div class="intel-impact-row">
@@ -1001,7 +999,7 @@ function renderIntelligenceCards() {
 
                     ${evt.charterer_action ? `
                         <div class="charterer-action-box">
-                            <span class="charterer-action-label">💡 Charterer Action:</span>
+                            <span class="charterer-action-label">Charterer Action:</span>
                             ${evt.charterer_action}
                         </div>
                     ` : ''}
@@ -1138,7 +1136,7 @@ async function generateForecast() {
         alert(`Forecast failed: ${error.message}`);
     } finally {
         forecastBtn.disabled = false;
-        forecastBtn.innerHTML = '<span class="btn-icon">🔮</span> Generate Forecast';
+        forecastBtn.innerHTML = 'Generate Forecast';
     }
 }
 
@@ -1152,13 +1150,13 @@ function displayResults(data) {
     decisionBanner.className = 'decision-banner';
     if (data.decision_recommendation.includes('BOOK NOW')) {
         decisionBanner.classList.add('decision-book');
-        decisionBanner.innerHTML = `✅ <strong>${data.decision_recommendation}</strong>`;
+        decisionBanner.innerHTML = `<strong>${data.decision_recommendation}</strong>`;
     } else if (data.decision_recommendation.includes('WAIT')) {
         decisionBanner.classList.add('decision-wait');
-        decisionBanner.innerHTML = `⏳ <strong>${data.decision_recommendation}</strong>`;
+        decisionBanner.innerHTML = `<strong>${data.decision_recommendation}</strong>`;
     } else {
         decisionBanner.classList.add('decision-neutral');
-        decisionBanner.innerHTML = `📊 <strong>${data.decision_recommendation}</strong>`;
+        decisionBanner.innerHTML = `<strong>${data.decision_recommendation}</strong>`;
     }
 
     // Physical Port Clearance Rendering
@@ -1259,7 +1257,7 @@ function renderPortClearance(data) {
         const warnings = clearance.clearance_warnings || [];
         if (warnings.length > 0) {
             clearanceWarningsList.style.display = 'block';
-            clearanceWarningsList.innerHTML = warnings.map(w => `<div>⚠️ ${w}</div>`).join('');
+            clearanceWarningsList.innerHTML = warnings.map(w => `<div>${w}</div>`).join('');
         } else {
             clearanceWarningsList.style.display = 'none';
         }
@@ -1352,7 +1350,7 @@ function renderRouteIntelAlert(data) {
         if (routeAlertBadge) routeAlertBadge.textContent = `${sevText} (${sev}/10)`;
         if (routeAlertMessage) routeAlertMessage.textContent = `${topEvent.category}: ${topEvent.headline} — ${topEvent.threat_analysis}`;
         if (routeAlertAction) {
-            routeAlertAction.textContent = topEvent.charterer_action ? `💡 Advisory: ${topEvent.charterer_action}` : '';
+            routeAlertAction.textContent = topEvent.charterer_action ? `Advisory: ${topEvent.charterer_action}` : '';
         }
     } else {
         routeIntelAlert.style.display = 'none';
@@ -1396,7 +1394,7 @@ async function openProcurementTender() {
 
     if (tenderModal) tenderModal.style.display = 'flex';
     if (tenderSheetBody) {
-        tenderSheetBody.innerHTML = '<div style="text-align:center; padding: 30px;">⏳ Generating official Government procurement tender specification...</div>';
+        tenderSheetBody.innerHTML = '<div style="text-align:center; padding: 30px;">Generating official Government procurement tender specification...</div>';
     }
 
     const payload = {

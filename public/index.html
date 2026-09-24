@@ -93,7 +93,7 @@
                                 <p class="predictions-subtitle">Model trained on 2006–2026 Baltic Dry Index & commodity data | Full-Year 2026 Multi-Route Forward Curve (Jan 26 – Dec 26)</p>
                             </div>
                             <div class="predictions-badges">
-                                <span class="pred-badge pred-badge-green">🎯 97.6% Accuracy (MAPE 2.35%)</span>
+                                <span class="pred-badge pred-badge-green">97.6% Accuracy (MAPE 2.35%)</span>
                                 <span class="pred-badge pred-badge-blue">R² Score: 91.7%</span>
                                 <span class="pred-badge pred-badge-purple">MAE: $0.67/MT</span>
                             </div>
@@ -119,14 +119,13 @@
                     <section class="optimizer-section" id="vessel-optimizer-section">
                         <div class="optimizer-header">
                             <div class="intel-title-row">
-                                <span class="intel-badge-icon">⚙️</span>
                                 <div>
                                     <h2 class="section-title" style="margin-bottom: 4px;">Multi-Vessel Auto-Optimizer & Cost Comparison</h2>
                                     <p class="intel-subtitle">Automatic side-by-side evaluation of Capesize, Panamax, Supramax & Handysize for optimal landed cost and port clearance</p>
                                 </div>
                             </div>
                             <button id="run-optimizer-btn" class="optimizer-run-btn">
-                                <span>⚡ Re-Optimize Fleet</span>
+                                <span>Re-Optimize Fleet</span>
                             </button>
                         </div>
 
@@ -158,7 +157,6 @@
                                         <tr>
                                             <td colspan="7" class="opt-empty-row">
                                                 <div class="opt-empty-state">
-                                                    <span class="opt-empty-icon">📍</span>
                                                     <div class="opt-empty-content">
                                                         <h4>No Route Selected</h4>
                                                         <p>Select an <strong>Origin Port</strong> and <strong>Destination Port (India East Coast)</strong> in the Route Configuration panel on the right to evaluate vessel classes, port clearances, and landed costs.</p>
@@ -177,7 +175,6 @@
                         <div class="intelligence-header">
                             <div>
                                 <div class="intel-title-row">
-                                    <span class="intel-badge-icon">🌐</span>
                                     <h2 class="section-title" style="margin-bottom: 4px;">AI Maritime Intelligence & Black Swan Advisory</h2>
                                 </div>
                                 <p class="intel-subtitle">Real-time geopolitical disruption, canal chokepoint & supply shock intelligence analyzed by Google Gemini AI</p>
@@ -191,7 +188,7 @@
                                     </span>
                                 </div>
                                 <button id="refresh-intel-btn" class="intel-refresh-btn" title="Fetch latest maritime RSS feeds & re-run Gemini AI analysis">
-                                    <span class="refresh-icon">🔄</span> Refresh Intel
+                                    <span class="refresh-icon">↻</span> Refresh Intel
                                 </button>
                             </div>
                         </div>
@@ -234,7 +231,7 @@
                                     Loading AI maritime intelligence analysis...
                                 </p>
                                 <div class="intel-summary-footer">
-                                    <span class="intel-isolation-note">🔒 Advisory Layer: 100% Independent from Quantitative ML Rate Engine</span>
+                                    <span class="intel-isolation-note">Advisory Layer: 100% Independent from Quantitative ML Rate Engine</span>
                                 </div>
                             </div>
                         </div>
@@ -244,11 +241,11 @@
                             <span class="intel-filter-label">Filter Disruptions:</span>
                             <div class="intel-filter-chips" id="intel-filter-chips">
                                 <button class="intel-chip active" data-category="ALL">All Alerts (<span id="count-all">0</span>)</button>
-                                <button class="intel-chip" data-category="CRITICAL">🚨 Critical (≥7) (<span id="count-critical">0</span>)</button>
-                                <button class="intel-chip" data-category="Canal & Chokepoint">⚓ Chokepoints & Canals (<span id="count-chokepoint">0</span>)</button>
-                                <button class="intel-chip" data-category="Geopolitical & War">🌍 Geopolitical & Security (<span id="count-geopolitical">0</span>)</button>
-                                <button class="intel-chip" data-category="Port & Labor">🏗️ Ports & Strikes (<span id="count-port">0</span>)</button>
-                                <button class="intel-chip" data-category="Weather & Climate">🌀 Extreme Weather (<span id="count-weather">0</span>)</button>
+                                <button class="intel-chip" data-category="CRITICAL">Critical (≥7) (<span id="count-critical">0</span>)</button>
+                                <button class="intel-chip" data-category="Canal & Chokepoint">Chokepoints & Canals (<span id="count-chokepoint">0</span>)</button>
+                                <button class="intel-chip" data-category="Geopolitical & War">Geopolitical & Security (<span id="count-geopolitical">0</span>)</button>
+                                <button class="intel-chip" data-category="Port & Labor">Ports & Strikes (<span id="count-port">0</span>)</button>
+                                <button class="intel-chip" data-category="Weather & Climate">Extreme Weather (<span id="count-weather">0</span>)</button>
                             </div>
                         </div>
 
@@ -263,7 +260,7 @@
                 <aside class="forecast-sidebar">
                     <section class="forecast-section">
                         <div class="forecast-sidebar-header">
-                            <h2 class="section-title forecast-main-title">🔮 Generate Forecast</h2>
+                            <h2 class="section-title forecast-main-title">Generate Forecast</h2>
                             <span class="forecast-dock-badge">Live ML Panel</span>
                         </div>
 
@@ -326,7 +323,6 @@
                                 </div>
 
                                 <button id="forecast-btn" class="btn btn-primary">
-                                    <span class="btn-icon">🔮</span>
                                     Generate Forecast
                                 </button>
                             </div>
@@ -344,7 +340,7 @@
                                 <!-- Physical Port Clearance Status -->
                                 <div id="port-clearance-box" class="port-clearance-box">
                                     <div class="clearance-header">
-                                        <span class="clearance-title">⚓ Physical Port Clearance</span>
+                                        <span class="clearance-title">Physical Port Clearance</span>
                                         <span id="clearance-overall-badge" class="clearance-badge badge-pass">PASSED</span>
                                     </div>
                                     <div class="clearance-metrics-row">
@@ -366,7 +362,6 @@
 
                                 <!-- Contextual AI Maritime Intelligence Route Alert -->
                                 <div id="route-intel-alert" class="route-intel-alert" style="display: none;">
-                                    <span class="route-intel-icon">🌐</span>
                                     <div class="route-intel-body">
                                         <div class="route-intel-title-row">
                                             <span class="route-intel-title">Corridor Threat Alert</span>
@@ -402,7 +397,6 @@
                                 <div class="confidence-section">
                                     <div class="confidence-header">
                                         <div class="confidence-title">
-                                            <span class="conf-icon">🎯</span>
                                             <strong>Forecast Range & Uncertainty</strong>
                                         </div>
                                         <span class="confidence-badge">97.6% Accuracy | 90% Confidence Interval</span>
@@ -435,7 +429,7 @@
                                 <!-- Contract Timing Strategy Matrix -->
                                 <div class="contract-strategy-section" id="contract-strategy-section">
                                     <div class="strategy-header">
-                                        <h4>📋 Chartering & Procurement Strategy</h4>
+                                        <h4>Chartering & Procurement Strategy</h4>
                                         <span id="strategy-recommendation-badge" class="strategy-pill pill-green">LOCK TERM</span>
                                     </div>
                                     <p id="strategy-rationale-text" class="strategy-rationale-text">Analyzing market volatility and forward curve...</p>
@@ -477,7 +471,6 @@
 
                                 <!-- Savings Info -->
                                 <div id="savings-info" class="savings-info" style="display: none;">
-                                    <span class="savings-icon">💰</span>
                                     <div>
                                         <strong>Expected Savings</strong>
                                         <p id="savings-text">--</p>
@@ -487,7 +480,7 @@
                                 <!-- Action Buttons: Procurement Tender Export -->
                                 <div class="tender-action-container">
                                     <button id="open-tender-modal-btn" class="btn btn-tender">
-                                        <span>📑 Generate Procurement Tender Fixture</span>
+                                        <span>Generate Procurement Tender Fixture</span>
                                     </button>
                                 </div>
                             </div>
@@ -504,14 +497,13 @@
         <div class="modal-content tender-modal-content">
             <div class="tender-modal-header">
                 <div class="tender-modal-title-area">
-                    <span class="tender-emblem">🏛️</span>
                     <div>
                         <h2>Government of India | Ministry of Steel</h2>
                         <p class="tender-subtitle">Commercial Charter Fixture & Procurement Tender Specification</p>
                     </div>
                 </div>
                 <div class="tender-modal-actions">
-                    <button id="print-tender-btn" class="btn btn-sm btn-outline">🖨️ Print / Save PDF</button>
+                    <button id="print-tender-btn" class="btn btn-sm btn-outline">Print / Save PDF</button>
                     <button id="close-tender-btn" class="modal-close-btn">&times;</button>
                 </div>
             </div>
