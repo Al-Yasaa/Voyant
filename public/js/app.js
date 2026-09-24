@@ -137,26 +137,76 @@ const ROUTE_COLORS = {
 // 1. MARKET DATA & 2026 PREDICTIONS CHART
 // =========================================================================
 
+async function ensureChartJsLoaded() {
+    if (typeof Chart !== 'undefined') return true;
+
+    return new Promise((resolve) => {
+        let attempts = 0;
+        const maxAttempts = 30; // 3 seconds max
+
+        const checkInterval = setInterval(() => {
+            attempts++;
+            if (typeof Chart !== 'undefined') {
+                clearInterval(checkInterval);
+                resolve(true);
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                resolve(typeof Chart !== 'undefined');
+            }
+        }, 100);
+
+        // Inject fallback CDN if primary didn't load
+        if (!document.getElementById('chartjs-fallback-script')) {
+            const script = document.createElement('script');
+            script.id = 'chartjs-fallback-script';
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js';
+            script.onload = () => {
+                clearInterval(checkInterval);
+                resolve(true);
+            };
+            script.onerror = () => {
+                console.warn('Fallback Chart.js CDN unreachable, activating native canvas renderer.');
+            };
+            document.head.appendChild(script);
+        }
+    });
+}
+
 async function loadPredictionsChart() {
     try {
-        let response;
+        let data = null;
+
+        // 1. Try backend API endpoint
         try {
-            response = await fetch(`${API_BASE}/api/forecast/2026-predictions`);
+            const response = await fetch(`${API_BASE}/api/forecast/2026-predictions`);
+            if (response && response.ok) {
+                data = await response.json();
+            }
         } catch (fetchErr) {
-            console.warn('Backend API not reachable for chart, loading synthesized 2026 trajectory.');
+            console.warn('Backend API not reachable for chart, checking static cache.');
         }
 
-        let data;
-        if (response && response.ok) {
-            data = await response.json();
-        } else {
+        // 2. Try static data directory
+        if (!data || !data.routes) {
+            try {
+                const staticResp = await fetch('data/predictions_2026.json');
+                if (staticResp && staticResp.ok) {
+                    data = await staticResp.json();
+                }
+            } catch (staticErr) {
+                console.warn('Static data not reachable, using synthesized forward trajectory.');
+            }
+        }
+
+        // 3. Fallback to resilient synthesized 2026 trajectory
+        if (!data || !data.routes) {
             data = generateSynthetic2026Data();
         }
 
         allPredictionsData = data;
         renderRouteFilters(data);
-        renderChart(data, 'ALL');
         renderPredictionStats();
+        await renderChart(data, activeRouteKey || 'ALL');
 
     } catch (error) {
         console.error('Error loading 2026 predictions chart:', error);
@@ -201,13 +251,128 @@ function renderRouteFilters(data) {
     });
 }
 
-function renderChart(data, routeFilter) {
-    const ctx = document.getElementById('predictions-chart');
+async function renderChart(data, routeFilter) {
+    const canvas = document.getElementById('predictions-chart');
+    if (!canvas) return;
+
+    const chartReady = await ensureChartJsLoaded();
+
+    if (chartReady && typeof Chart !== 'undefined') {
+        if (predictionsChartInstance) {
+            try {
+                predictionsChartInstance.destroy();
+            } catch (e) {
+                console.warn('Error destroying chart instance:', e);
+            }
+            predictionsChartInstance = null;
+        }
+
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthLabels = data.dates.map(d => {
+            const parts = d.split('-');
+            if (parts.length >= 2) {
+                const y = parts[0].slice(-2);
+                const m = parseInt(parts[1], 10);
+                return `${monthNames[m - 1]} ${y}`;
+            }
+            return d;
+        });
+
+        const datasets = [];
+        for (const [key, val] of Object.entries(data.routes)) {
+            if (routeFilter !== 'ALL' && key !== routeFilter) continue;
+            const color = ROUTE_COLORS[key] || { border: '#106a50', bg: 'rgba(16, 106, 80, 0.12)' };
+            datasets.push({
+                label: val.label,
+                data: val.predicted_rates,
+                borderColor: color.border,
+                backgroundColor: color.bg,
+                borderWidth: 2.5,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.35,
+                fill: routeFilter !== 'ALL'
+            });
+        }
+
+        const ctx = canvas.getContext('2d');
+        predictionsChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { labels: monthLabels, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 12, font: { size: 12, weight: '600' }, color: '#0f3d32' }
+                    },
+                    tooltip: {
+                        backgroundColor: '#0a4c39',
+                        titleColor: '#ffffff',
+                        bodyColor: '#e2edea',
+                        borderColor: '#188a68',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.dataset.label}: $${context.parsed.y.toFixed(2)}/MT`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(212, 226, 223, 0.6)' },
+                        ticks: { font: { weight: '600' }, color: '#4a6b63' }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Predicted Freight Rate (USD / MT)',
+                            font: { size: 13, weight: '700' },
+                            color: '#0a4c39'
+                        },
+                        grid: { color: 'rgba(212, 226, 223, 0.6)' },
+                        ticks: {
+                            callback: value => `$${parseFloat(value.toFixed(2))}`,
+                            font: { weight: '600' },
+                            color: '#4a6b63'
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        // High-definition Native Canvas Fallback (Zero external dependencies)
+        renderNativeCanvasChart(canvas, data, routeFilter);
+    }
+}
+
+function renderNativeCanvasChart(canvas, data, routeFilter) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    if (predictionsChartInstance) {
-        predictionsChartInstance.destroy();
-    }
+    const parent = canvas.parentElement;
+    const width = parent ? parent.clientWidth - 40 : 800;
+    const height = 280;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    ctx.scale(dpr, dpr);
+
+    const padLeft = 65;
+    const padRight = 30;
+    const padTop = 35;
+    const padBottom = 45;
+    const chartW = width - padLeft - padRight;
+    const chartH = height - padTop - padBottom;
+
+    ctx.clearRect(0, 0, width, height);
 
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthLabels = data.dates.map(d => {
@@ -220,70 +385,103 @@ function renderChart(data, routeFilter) {
         return d;
     });
 
-    const datasets = [];
+    let allRates = [];
     for (const [key, val] of Object.entries(data.routes)) {
         if (routeFilter !== 'ALL' && key !== routeFilter) continue;
-        const color = ROUTE_COLORS[key] || { border: '#2563eb', bg: 'rgba(37, 99, 235, 0.1)' };
-        datasets.push({
-            label: val.label,
-            data: val.predicted_rates,
-            borderColor: color.border,
-            backgroundColor: color.bg,
-            borderWidth: 2.5,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            tension: 0.35,
-            fill: routeFilter !== 'ALL'
-        });
+        allRates.push(...val.predicted_rates);
+    }
+    if (allRates.length === 0) allRates = [10, 80];
+
+    const minVal = Math.max(0, Math.floor(Math.min(...allRates) / 10) * 10 - 5);
+    const maxVal = Math.ceil(Math.max(...allRates) / 10) * 10 + 5;
+    const valRange = maxVal - minVal || 1;
+
+    // Grid lines & Y-axis labels
+    ctx.strokeStyle = 'rgba(212, 226, 223, 0.7)';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#4a6b63';
+    ctx.font = '600 11px Inter, sans-serif';
+    ctx.textAlign = 'right';
+
+    const ySteps = 5;
+    for (let i = 0; i <= ySteps; i++) {
+        const yVal = minVal + (valRange * i) / ySteps;
+        const yPos = padTop + chartH - (chartH * i) / ySteps;
+
+        ctx.beginPath();
+        ctx.moveTo(padLeft, yPos);
+        ctx.lineTo(padLeft + chartW, yPos);
+        ctx.stroke();
+
+        ctx.fillText(`$${Math.round(yVal)}`, padLeft - 8, yPos + 4);
     }
 
-    predictionsChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: { labels: monthLabels, datasets: datasets },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: { boxWidth: 12, font: { size: 12, weight: '600' }, color: '#0f3d32' }
-                },
-                tooltip: {
-                    backgroundColor: '#0a4c39',
-                    titleColor: '#ffffff',
-                    bodyColor: '#e2edea',
-                    borderColor: '#188a68',
-                    borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            return ` ${context.dataset.label}: $${context.parsed.y.toFixed(2)}/MT`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(212, 226, 223, 0.6)' },
-                    ticks: { font: { weight: '600' }, color: '#4a6b63' }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Predicted Freight Rate (USD / MT)',
-                        font: { size: 13, weight: '700' },
-                        color: '#0a4c39'
-                    },
-                    grid: { color: 'rgba(212, 226, 223, 0.6)' },
-                    ticks: {
-                        callback: value => `$${parseFloat(value.toFixed(2))}`,
-                        font: { weight: '600' },
-                        color: '#4a6b63'
-                    }
-                }
-            }
+    // Y Axis Title
+    ctx.save();
+    ctx.translate(16, padTop + chartH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#0a4c39';
+    ctx.font = '700 11px Inter, sans-serif';
+    ctx.fillText('Freight Rate (USD / MT)', 0, 0);
+    ctx.restore();
+
+    // X-axis labels
+    const numPoints = monthLabels.length;
+    const xStep = chartW / (numPoints - 1);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#4a6b63';
+    ctx.font = '600 11px Inter, sans-serif';
+
+    for (let i = 0; i < numPoints; i++) {
+        const xPos = padLeft + i * xStep;
+        ctx.fillText(monthLabels[i], xPos, padTop + chartH + 20);
+    }
+
+    // Draw Routes
+    for (const [key, val] of Object.entries(data.routes)) {
+        if (routeFilter !== 'ALL' && key !== routeFilter) continue;
+        const color = ROUTE_COLORS[key] || { border: '#106a50', bg: 'rgba(16, 106, 80, 0.15)' };
+        const rates = val.predicted_rates;
+
+        const points = rates.map((rate, i) => {
+            const x = padLeft + i * xStep;
+            const y = padTop + chartH - ((rate - minVal) / valRange) * chartH;
+            return { x, y, rate };
+        });
+
+        // Fill area for single route
+        if (routeFilter !== 'ALL') {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, padTop + chartH);
+            points.forEach(pt => ctx.lineTo(pt.x, pt.y));
+            ctx.lineTo(points[points.length - 1].x, padTop + chartH);
+            ctx.closePath();
+            ctx.fillStyle = color.bg;
+            ctx.fill();
         }
-    });
+
+        // Stroke line
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.strokeStyle = color.border;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Points
+        points.forEach((pt) => {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = color.border;
+            ctx.stroke();
+        });
+    }
 }
 
 function renderPredictionStats() {
