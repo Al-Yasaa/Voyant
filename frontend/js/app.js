@@ -1107,7 +1107,7 @@ async function generateForecast() {
     }
 
     forecastBtn.disabled = true;
-    forecastBtn.innerHTML = '<span class="btn-icon">⏳</span> Forecasting...';
+    forecastBtn.innerHTML = '<span class="refresh-icon spinning">↻</span> Calculating...';
 
     try {
         const response = await fetch(`${API_BASE}/api/forecast`, {
