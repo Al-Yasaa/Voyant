@@ -4,10 +4,10 @@ Serves ML predictions, AI Maritime Intelligence, Multi-Vessel Optimization,
 Contract Timing Strategies, and Procurement Fixture Generation.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, List, Any
 import pandas as pd
@@ -60,6 +60,38 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def vercel_route_normalizer(request: Request, call_next):
+    """
+    Normalizes request paths on Vercel serverless environment.
+    If Vercel rewrites /api/(.*) to /api/index.py, this restores the target route.
+    """
+    path = request.url.path
+    matched_path = (
+        request.headers.get("x-matched-path", "")
+        or request.headers.get("x-forwarded-uri", "")
+        or request.headers.get("x-original-uri", "")
+    )
+
+    if "index.py" in path:
+        if matched_path and "index.py" not in matched_path:
+            clean_path = matched_path.split("?")[0]
+            request.scope["path"] = clean_path
+        else:
+            new_path = path.replace("/api/index.py", "").replace("/index.py", "")
+            if not new_path or new_path == "/":
+                if request.method == "POST":
+                    new_path = "/api/forecast"
+                else:
+                    new_path = "/api/health"
+            elif not new_path.startswith("/api/") and not new_path.startswith("/"):
+                new_path = f"/api/{new_path}"
+            request.scope["path"] = new_path
+
+    response = await call_next(request)
+    return response
 
 # Project paths
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -156,6 +188,7 @@ class ProcurementTenderRequest(BaseModel):
 
 @app.get("/api/health")
 @app.get("/health")
+@app.get("/api/index.py")
 def root():
     """API health check."""
     return {
@@ -284,6 +317,7 @@ def compute_contract_strategy(predicted_rate: float, current_spot: float, foreca
 
 @app.post("/api/forecast", response_model=ForecastResponse)
 @app.post("/forecast", response_model=ForecastResponse)
+@app.post("/api/index.py", response_model=ForecastResponse)
 def forecast_freight_rate(request: ForecastRequest):
     """Generate freight rate forecast for a specific route with full clearance and contract strategy."""
     try:
