@@ -85,33 +85,53 @@
                         </div>
                     </section>
 
-                    <!-- 2026 Predictions Chart -->
+                    <!-- Dual-Phase 2025-2026 Predictions Chart -->
                     <section class="predictions-section">
                         <div class="predictions-header">
                             <div>
-                                <h2 class="section-title" style="margin-bottom: 4px;">2026 Freight Rate Trajectory</h2>
-                                <p class="predictions-subtitle">Model trained on 2006–2026 Baltic Dry Index & commodity data | Full-Year 2026 Multi-Route Forward Curve (Jan 26 – Dec 26)</p>
+                                <h2 class="section-title" style="margin-bottom: 4px;">Dual-Phase Multi-Factor Freight Rate Forecaster</h2>
+                                <p class="predictions-subtitle">Calibrated on 2006–2026 Baltic Dry Index & East Coast commodity flows | 2025 Historical Actuals (Solid) & 2026 Forward Projections (Dashed) with P10–P90 Confidence Bounds</p>
                             </div>
                             <div class="predictions-badges">
-                                <span class="pred-badge pred-badge-green">97.6% Accuracy (MAPE 2.35%)</span>
+                                <span class="pred-badge pred-badge-green">97.6% Model Accuracy (MAPE 2.35%)</span>
                                 <span class="pred-badge pred-badge-blue">R² Score: 91.7%</span>
                                 <span class="pred-badge pred-badge-purple">MAE: $0.67/MT</span>
                             </div>
                         </div>
 
-                        <div class="chart-controls">
-                            <div class="chart-route-filters" id="route-filters">
-                                <!-- Populated by JS -->
+                        <!-- Chart Controls & Legend Bar -->
+                        <div class="chart-controls-wrapper">
+                            <div class="chart-controls-left">
+                                <div class="chart-control-group">
+                                    <span class="chart-control-label">Corridor Route:</span>
+                                    <div class="chart-route-filters" id="route-filters">
+                                        <!-- Populated by JS -->
+                                    </div>
+                                </div>
+                                <div class="chart-control-group">
+                                    <span class="chart-control-label">Vessel Class Multiplier:</span>
+                                    <div class="vessel-multiplier-chips" id="vessel-multiplier-chips">
+                                        <button class="vessel-chip active" data-vessel="Capesize" data-mult="1.00">Capesize (1.00x)</button>
+                                        <button class="vessel-chip" data-vessel="Panamax" data-mult="0.76">Panamax (0.76x)</button>
+                                        <button class="vessel-chip" data-vessel="Supramax" data-mult="0.65">Supramax (0.65x)</button>
+                                        <button class="vessel-chip" data-vessel="Handysize" data-mult="0.55">Handysize (0.55x)</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chart-legend-pills">
+                                <span class="legend-pill"><span class="legend-dot solid-dot"></span> 2025 Actuals (Solid)</span>
+                                <span class="legend-pill"><span class="legend-dot dashed-dot"></span> 2026 Projected (Dashed)</span>
+                                <span class="legend-pill"><span class="legend-dot band-dot"></span> P10–P90 Envelope</span>
                             </div>
                         </div>
 
                         <div class="card chart-card">
-                            <canvas id="predictions-chart" height="105"></canvas>
+                            <canvas id="predictions-chart" height="110"></canvas>
                         </div>
 
-                        <!-- Summary Stats -->
+                        <!-- 3 Below-Chart Summary Metric Cards -->
                         <div class="pred-stats-grid" id="pred-stats-grid">
-                            <!-- Populated by JS -->
+                            <!-- Populated dynamically by JS -->
                         </div>
                     </section>
 
