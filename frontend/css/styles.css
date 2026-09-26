@@ -309,27 +309,6 @@ body {
     50% { transform: scale(1.25); opacity: 0.75; box-shadow: 0 0 12px #34d399; }
 }
 
-/* Forecaster Centerpiece Highlight */
-.predictions-section.forecaster-highlight {
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-top: 4px solid var(--primary);
-    border-radius: 14px;
-    padding: 24px;
-    box-shadow: 0 4px 16px rgba(10, 76, 57, 0.08);
-    margin-bottom: 35px;
-}
-
-.pred-badge-hero {
-    background: #094735;
-    color: #a7f3d0;
-    border: 1px solid #134e40;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    font-size: 11px;
-    padding: 4px 8px;
-}
-
 /* Main Content */
 .main-content {
     padding: 30px 0;
