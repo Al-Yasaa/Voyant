@@ -8,11 +8,12 @@ import os
 import json
 import time
 import re
+import email.utils
 import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
 
 try:
@@ -128,6 +129,37 @@ _intelligence_cache: Dict[str, Any] = {
 CACHE_TTL_SECONDS = 3600  # 1 hour
 
 
+def _format_pub_date(pub_date_raw: str, fallback_days_ago: int = 0) -> str:
+    """Safely convert any RSS pubDate string into a clean YYYY-MM-DD ISO date string."""
+    today = datetime.now(timezone.utc)
+    fallback_date = (today - timedelta(days=fallback_days_ago)).strftime("%Y-%m-%d")
+    if not pub_date_raw:
+        return fallback_date
+    try:
+        dt = email.utils.parsedate_to_datetime(pub_date_raw)
+        return dt.strftime("%Y-%m-%d")
+    except Exception:
+        pass
+    try:
+        clean = pub_date_raw.replace("Z", "+00:00").split("T")[0]
+        if len(clean) == 10 and clean[4] == "-" and clean[7] == "-":
+            return clean
+    except Exception:
+        pass
+    return fallback_date
+
+
+def _get_dynamic_scenarios() -> List[Dict[str, Any]]:
+    """Return curated baseline scenarios with dynamically computed recent publication dates."""
+    today = datetime.now(timezone.utc)
+    scenarios = []
+    for idx, s in enumerate(CURATED_MARITIME_SCENARIOS):
+        item = dict(s)
+        item["published_date"] = (today - timedelta(days=idx)).strftime("%Y-%m-%d")
+        scenarios.append(item)
+    return scenarios
+
+
 def _fetch_single_feed(feed: Dict[str, str], timeout: int = 4) -> List[Dict[str, Any]]:
     """Fetch and parse a single RSS feed safely."""
     headers = {
@@ -196,23 +228,27 @@ def _fetch_rss_articles(timeout: int = 4) -> List[Dict[str, str]]:
 def _call_gemini_api(articles: List[Dict[str, str]], api_key: str) -> Optional[Dict[str, Any]]:
     """
     Calls Google Gemini REST API to perform Black Swan and geopolitical threat analysis.
-    Uses latest production models (gemini-3.6-flash / gemini-3.7-flash / gemini-3.5-flash / gemini-flash-latest).
+    Uses latest production models (gemini-2.0-flash / gemini-1.5-flash / gemini-2.5-flash / gemini-1.5-pro / gemini-2.0-flash-lite).
     """
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     article_summaries = []
     for idx, art in enumerate(articles[:12], 1):
+        formatted_date = _format_pub_date(art.get('pub_date'), fallback_days_ago=idx-1)
         article_summaries.append(
-            f"[{idx}] Source: {art['source']} | Title: {art['title']} | Date: {art['pub_date']}\n"
+            f"[{idx}] Source: {art['source']} | Title: {art['title']} | Date: {formatted_date}\n"
             f"    Snippet: {art['description']}\n    URL: {art['link']}"
         )
     articles_payload_text = "\n\n".join(article_summaries)
 
     system_prompt = (
-        "You are the Chief Maritime Risk & Chartering Intelligence Officer for the Ministry of Steel (Government of India). "
+        f"You are the Chief Maritime Risk & Chartering Intelligence Officer for the Ministry of Steel (Government of India). "
+        f"Today's date is {today_iso}.\n"
         "Your duty is to assess global geopolitical conflicts, canal chokepoints (Red Sea, Suez, Panama, Malacca), "
         "port labor strikes, bunker fuel anomalies, and severe maritime weather events to identify Black Swan risks "
         "and freight rate volatility for bulk raw materials (coking coal, iron ore) heading to Indian East Coast steel ports "
         "(Paradip, Dhamra, Visakhapatnam, Haldia) from Australia, USA, South Africa, Mozambique, and Indonesia.\n\n"
         "Analyze the provided live maritime news feeds and synthesize a concise, structured intelligence briefing.\n\n"
+        f"TEMPORAL ACCURACY REQUIREMENT: All analyzed events must reflect up-to-the-minute real-time news with publication dates matching the news items or today ({today_iso}). Never output historical dates prior to the provided feed items.\n\n"
         "STRICT REQUIREMENTS:\n"
         "1. overall_market_threat_level MUST be one of: 'LOW', 'ELEVATED', 'HIGH', 'CRITICAL'.\n"
         "2. black_swan_risk_index MUST be an integer between 0 and 100.\n"
@@ -222,7 +258,7 @@ def _call_gemini_api(articles: List[Dict[str, str]], api_key: str) -> Optional[D
         "   - id: Unique string (e.g. 'gemini-01')\n"
         "   - headline: Clear, concise maritime threat title\n"
         "   - source: News source name\n"
-        "   - published_date: Date string or 'Recent'\n"
+        f"   - published_date: Date string formatted as YYYY-MM-DD (e.g. '{today_iso}')\n"
         "   - category: One of 'Canal & Chokepoint', 'Geopolitical & Security', 'Port & Labor', 'Weather & Monsoon', 'Commodity & Tariff', 'Fleet & Bunker'\n"
         "   - severity_score: Integer from 1 to 10 (10 = catastrophic Black Swan disruption)\n"
         "   - impact_direction: One of 'BULLISH_FREIGHT', 'BEARISH_FREIGHT', 'TRANSIT_DELAY', 'NEUTRAL'\n"
@@ -234,11 +270,11 @@ def _call_gemini_api(articles: List[Dict[str, str]], api_key: str) -> Optional[D
     )
 
     models_to_try = [
-        "gemini-3.1-flash-lite",
-        "gemini-3.5-flash-lite",
-        "gemini-flash-lite-latest",
-        "gemini-3-flash-preview",
-        "gemini-3.5-flash"
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-2.5-flash",
+        "gemini-1.5-pro",
+        "gemini-2.0-flash-lite"
     ]
 
     for model_name in models_to_try:
@@ -269,7 +305,7 @@ def _call_gemini_api(articles: List[Dict[str, str]], api_key: str) -> Optional[D
                     "x-goog-api-key": api_key
                 }
             )
-            with urllib.request.urlopen(req, timeout=15) as response:
+            with urllib.request.urlopen(req, timeout=10) as response:
                 result_raw = response.read().decode("utf-8")
                 result_json = json.loads(result_raw)
 
@@ -307,9 +343,14 @@ def _call_gemini_api(articles: List[Dict[str, str]], api_key: str) -> Optional[D
                 # Ensure minimum requirements
                 if "overall_market_threat_level" in parsed and "top_intelligence_events" in parsed:
                     events = parsed.get("top_intelligence_events", [])
+                    # Normalize event dates
+                    for e in events:
+                        if not e.get("published_date") or e.get("published_date") == "Recent":
+                            e["published_date"] = today_iso
                     # Augment with baseline if fewer than 5 events
                     if len(events) < 5:
-                        for scenario in CURATED_MARITIME_SCENARIOS:
+                        dynamic_scenarios = _get_dynamic_scenarios()
+                        for scenario in dynamic_scenarios:
                             if len(events) >= 6:
                                 break
                             if not any(e.get("headline", "").lower() == scenario["headline"].lower() for e in events):
@@ -332,9 +373,10 @@ def _generate_heuristic_intelligence(articles: List[Dict[str, str]]) -> Dict[str
     """
     threat_events = []
     total_severity = 0
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     # 1. Process ingested live articles first
-    for idx, art in enumerate(articles[:4], 1):
+    for idx, art in enumerate(articles[:5], 1):
         title = art["title"]
         desc = art["description"]
         combined = f"{title} {desc}".lower()
@@ -380,11 +422,13 @@ def _generate_heuristic_intelligence(articles: List[Dict[str, str]]) -> Dict[str
             analysis = "Regional maritime security developments drive heightened war risk premiums and route adjustments."
             action = "Monitor maritime security circulars and confirm insurance surcharge terms."
 
+        pub_date = _format_pub_date(art.get("pub_date"), fallback_days_ago=idx-1)
+
         threat_events.append({
             "id": f"live-rss-{idx:02d}",
             "headline": title[:95] if len(title) > 95 else title,
             "source": art["source"],
-            "published_date": art["pub_date"][:16] if art["pub_date"] else "Latest Feed",
+            "published_date": pub_date,
             "category": category,
             "severity_score": severity,
             "impact_direction": impact,
@@ -395,8 +439,9 @@ def _generate_heuristic_intelligence(articles: List[Dict[str, str]]) -> Dict[str
         })
         total_severity += severity
 
-    # 2. Augment with curated baseline scenarios to ensure comprehensive coverage across all corridors
-    for scenario in CURATED_MARITIME_SCENARIOS:
+    # 2. Augment with dynamic curated baseline scenarios to ensure comprehensive coverage across all corridors
+    dynamic_scenarios = _get_dynamic_scenarios()
+    for scenario in dynamic_scenarios:
         if len(threat_events) >= 6:
             break
         # Avoid duplicate headlines

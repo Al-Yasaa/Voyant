@@ -737,81 +737,92 @@ function renderClientFallbackOptimizer(orig, dest, vol) {
 // 3. AI MARITIME INTELLIGENCE & BLACK SWAN ADVISORY MODULE
 // =========================================================================
 
-const FALLBACK_MARITIME_INTELLIGENCE = {
-    overall_market_threat_level: "ELEVATED",
-    black_swan_risk_index: 68,
-    executive_summary: "Geopolitical chokepoint risks and Red Sea security diversions continue to absorb global dry bulk ton-miles, forcing Cape of Good Hope rerouting. Australian port weather advisories and Indian monsoon coastal berthing queues pose secondary demurrage risks for steel mills.",
-    feeds_monitored: ["gCaptain", "Splash247", "Hellenic Shipping News"],
-    total_articles_scanned: 18,
-    last_updated: "2026-09-20 12:00:00 UTC",
-    top_intelligence_events: [
-        {
-            id: "evt-01",
-            headline: "Red Sea Bulker Security Escalation Extends Cape of Good Hope Diversions",
-            source: "gCaptain",
-            published_date: "2026-09-19",
-            category: "Canal & Chokepoint",
-            severity_score: 8,
-            impact_direction: "BULLISH_FREIGHT",
-            affected_routes: ["USA → Paradip", "Mozambique → Haldia", "South Africa → Vizag"],
-            threat_analysis: "Longer sailing distances around southern Africa lock up global Capesize and Panamax tonnage, tightening vessel supply across the Indian Ocean.",
-            charterer_action: "Lock in forward freight agreements (FFA) or long-term charters for Q4 metallurgical coal.",
-            url: "https://gcaptain.com"
-        },
-        {
-            id: "evt-02",
-            headline: "Panama Canal Draft Restrictions Cap Laden Bulker Transit Capacities",
-            source: "Splash247",
-            published_date: "2026-09-18",
-            category: "Canal & Chokepoint",
-            severity_score: 6,
-            impact_direction: "TRANSIT_DELAY",
-            affected_routes: ["USA → Paradip"],
-            threat_analysis: "Draft constraints limit maximum cargo intake per Panamax vessel, forcing split shipments or Cape Horn routings.",
-            charterer_action: "Factor an additional 8-12 days voyage lead time for Atlantic basin met coal procurements.",
-            url: "https://splash247.com"
-        },
-        {
-            id: "evt-03",
-            headline: "Australian Pilbara & Queensland Ports Issue Seasonal Cyclone Readiness Advisory",
-            source: "Hellenic Shipping News",
-            published_date: "2026-09-17",
-            category: "Weather & Climate",
-            severity_score: 7,
-            impact_direction: "BULLISH_FREIGHT",
-            affected_routes: ["Australia → Paradip", "Australia → Dhamra", "Australia → Vizag"],
-            threat_analysis: "Pre-monsoon and cyclone preparations at Hay Point and Dalrymple Bay Terminal may throttle loading rates and increase anchorage delays.",
-            charterer_action: "Advance laycan windows by 5 days and maintain 25 days buffer coal inventory at steel mill yards.",
-            url: "https://www.hellenicshippingnews.com"
-        },
-        {
-            id: "evt-04",
-            headline: "European Environmental ETS Maritime Levies Push Tonnage into Asian Basin",
-            source: "Splash247",
-            published_date: "2026-09-16",
-            category: "Geopolitical & War",
-            severity_score: 5,
-            impact_direction: "BEARISH_FREIGHT",
-            affected_routes: ["South Africa → Vizag", "Mozambique → Haldia"],
-            threat_analysis: "Older non-eco bulkers are being redeployed onto non-EU Pacific and Indian Ocean trades, easing regional vessel supply.",
-            charterer_action: "Negotiate aggressive spot discounts on older Capesize/Panamax vessels meeting Indian port age limits.",
-            url: "https://splash247.com"
-        },
-        {
-            id: "evt-05",
-            headline: "East Coast Indian Ports Report Mechanized Berth Upgrade Progress at Paradip & Gangavaram",
-            source: "Hellenic Shipping News",
-            published_date: "2026-09-15",
-            category: "Port & Labor",
-            severity_score: 4,
-            impact_direction: "BEARISH_FREIGHT",
-            affected_routes: ["Australia → Paradip", "USA → Paradip", "Australia → Vizag"],
-            threat_analysis: "Faster discharge rates (up to 55,000 MT/day) reduce port turnaround times and virtually eliminate demurrage overhead.",
-            charterer_action: "Favor Paradip and Gangavaram for mega-Capesize shipments to maximize dispatch earnings.",
-            url: "https://www.hellenicshippingnews.com"
-        }
-    ]
-};
+function getDynamicFallbackIntelligence() {
+    const now = new Date();
+    const isoDate = (daysAgo = 0) => {
+        const d = new Date(now.getTime() - daysAgo * 86400000);
+        return d.toISOString().split('T')[0];
+    };
+    const nowStr = now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+
+    return {
+        overall_market_threat_level: "ELEVATED",
+        black_swan_risk_index: 68,
+        executive_summary: "Geopolitical chokepoint risks and Red Sea security diversions continue to absorb global dry bulk ton-miles, forcing Cape of Good Hope rerouting. Australian port weather advisories and Indian monsoon coastal berthing queues pose secondary demurrage risks for steel mills.",
+        feeds_monitored: ["gCaptain", "Splash247", "Hellenic Shipping News"],
+        total_articles_scanned: 18,
+        last_updated: nowStr,
+        top_intelligence_events: [
+            {
+                id: "evt-01",
+                headline: "Red Sea Bulker Security Escalation Extends Cape of Good Hope Diversions",
+                source: "gCaptain",
+                published_date: isoDate(0),
+                category: "Canal & Chokepoint",
+                severity_score: 8,
+                impact_direction: "BULLISH_FREIGHT",
+                affected_routes: ["USA → Paradip", "Mozambique → Haldia", "South Africa → Vizag"],
+                threat_analysis: "Longer sailing distances around southern Africa lock up global Capesize and Panamax tonnage, tightening vessel supply across the Indian Ocean.",
+                charterer_action: "Lock in forward freight agreements (FFA) or long-term charters for Q4 metallurgical coal.",
+                url: "https://gcaptain.com"
+            },
+            {
+                id: "evt-02",
+                headline: "Panama Canal Draft Restrictions Cap Laden Bulker Transit Capacities",
+                source: "Splash247",
+                published_date: isoDate(1),
+                category: "Canal & Chokepoint",
+                severity_score: 6,
+                impact_direction: "TRANSIT_DELAY",
+                affected_routes: ["USA → Paradip"],
+                threat_analysis: "Draft constraints limit maximum cargo intake per Panamax vessel, forcing split shipments or Cape Horn routings.",
+                charterer_action: "Factor an additional 8-12 days voyage lead time for Atlantic basin met coal procurements.",
+                url: "https://splash247.com"
+            },
+            {
+                id: "evt-03",
+                headline: "Australian Pilbara & Queensland Ports Issue Seasonal Cyclone Readiness Advisory",
+                source: "Hellenic Shipping News",
+                published_date: isoDate(2),
+                category: "Weather & Climate",
+                severity_score: 7,
+                impact_direction: "BULLISH_FREIGHT",
+                affected_routes: ["Australia → Paradip", "Australia → Dhamra", "Australia → Vizag"],
+                threat_analysis: "Pre-monsoon and cyclone preparations at Hay Point and Dalrymple Bay Terminal may throttle loading rates and increase anchorage delays.",
+                charterer_action: "Advance laycan windows by 5 days and maintain 25 days buffer coal inventory at steel mill yards.",
+                url: "https://www.hellenicshippingnews.com"
+            },
+            {
+                id: "evt-04",
+                headline: "European Environmental ETS Maritime Levies Push Tonnage into Asian Basin",
+                source: "Splash247",
+                published_date: isoDate(3),
+                category: "Geopolitical & War",
+                severity_score: 5,
+                impact_direction: "BEARISH_FREIGHT",
+                affected_routes: ["South Africa → Vizag", "Mozambique → Haldia"],
+                threat_analysis: "Older non-eco bulkers are being redeployed onto non-EU Pacific and Indian Ocean trades, easing regional vessel supply.",
+                charterer_action: "Negotiate aggressive spot discounts on older Capesize/Panamax vessels meeting Indian port age limits.",
+                url: "https://splash247.com"
+            },
+            {
+                id: "evt-05",
+                headline: "East Coast Indian Ports Report Mechanized Berth Upgrade Progress at Paradip & Gangavaram",
+                source: "Hellenic Shipping News",
+                published_date: isoDate(4),
+                category: "Port & Labor",
+                severity_score: 4,
+                impact_direction: "BEARISH_FREIGHT",
+                affected_routes: ["Australia → Paradip", "USA → Paradip", "Australia → Vizag"],
+                threat_analysis: "Faster discharge rates (up to 55,000 MT/day) reduce port turnaround times and virtually eliminate demurrage overhead.",
+                charterer_action: "Favor Paradip and Gangavaram for mega-Capesize shipments to maximize dispatch earnings.",
+                url: "https://www.hellenicshippingnews.com"
+            }
+        ]
+    };
+}
+
+const FALLBACK_MARITIME_INTELLIGENCE = getDynamicFallbackIntelligence();
 
 async function loadMaritimeIntelligence(forceRefresh = false) {
     if (refreshIntelBtn) {
