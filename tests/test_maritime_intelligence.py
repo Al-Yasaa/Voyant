@@ -229,15 +229,17 @@ class TestFastAPIFullSuite:
         assert "black_swan_risk_index" in data
 
     def test_get_2026_predictions_endpoint(self, client):
-        """Test GET /api/forecast/2026-predictions returns 12 monthly predictions for all routes."""
+        """Test GET /api/forecast/2026-predictions returns 24-month dual-phase trajectory for all routes."""
         response = client.get("/api/forecast/2026-predictions")
         assert response.status_code == 200
         data = response.json()
         assert "dates" in data
-        assert len(data["dates"]) == 12
+        assert len(data["dates"]) == 24
         assert "routes" in data
         assert "Australia-HP" in data["routes"]
-        assert len(data["routes"]["Australia-HP"]["predicted_rates"]) == 12
+        route = data["routes"]["Australia-HP"]
+        assert len(route["historical_2025_rates"]) == 12
+        assert len(route["projected_2026_rates"]) == 12
 
     def test_post_forecast_with_clearance(self, client):
         """Test POST /api/forecast returns complete forecast with physical clearance and strategy."""

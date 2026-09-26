@@ -162,13 +162,43 @@ if (document.readyState === 'loading') {
     initializeApp();
 }
 
-// Color palette for chart routes matching Forest Emerald & Slate theme
+// Color palette for chart routes matching Forest Emerald, Slate, and Maritime executive theme
 const ROUTE_COLORS = {
-    'Australia-HP': { border: '#047857', proj: '#10b981', bg: 'rgba(4, 120, 87, 0.10)' },
-    'USA-HR':       { border: '#0a4c39', proj: '#059669', bg: 'rgba(10, 76, 57, 0.10)' },
-    'Indonesia':    { border: '#0d9488', proj: '#14b8a6', bg: 'rgba(13, 148, 136, 0.10)' },
-    'S.Africa':     { border: '#d97706', proj: '#f59e0b', bg: 'rgba(217, 119, 6, 0.10)' },
-    'Mozambique':   { border: '#475569', proj: '#64748b', bg: 'rgba(71, 85, 105, 0.10)' },
+    'Australia-HP': {
+        border: '#047857',
+        proj: '#10b981',
+        bg: 'rgba(4, 120, 87, 0.12)',
+        glow: 'rgba(16, 185, 129, 0.45)',
+        name: 'Australia (Hay Point)'
+    },
+    'USA-HR': {
+        border: '#0f766e',
+        proj: '#14b8a6',
+        bg: 'rgba(15, 118, 110, 0.12)',
+        glow: 'rgba(20, 184, 166, 0.45)',
+        name: 'USA (Hampton Roads)'
+    },
+    'Indonesia': {
+        border: '#0284c7',
+        proj: '#38bdf8',
+        bg: 'rgba(2, 132, 199, 0.12)',
+        glow: 'rgba(56, 189, 248, 0.45)',
+        name: 'Indonesia (Taboneo)'
+    },
+    'S.Africa': {
+        border: '#d97706',
+        proj: '#f59e0b',
+        bg: 'rgba(217, 119, 6, 0.12)',
+        glow: 'rgba(245, 158, 11, 0.45)',
+        name: 'South Africa (Richards Bay)'
+    },
+    'Mozambique': {
+        border: '#6366f1',
+        proj: '#818cf8',
+        bg: 'rgba(99, 102, 241, 0.12)',
+        glow: 'rgba(129, 140, 248, 0.45)',
+        name: 'Mozambique (Maputo)'
+    },
 };
 
 function setupVesselMultiplierListeners() {
@@ -384,7 +414,7 @@ const dualPhaseDividerPlugin = {
     afterDraw(chart) {
         const { ctx, chartArea, scales } = chart;
         if (!chartArea || !scales || !scales.x || !scales.y) return;
-        const { top, bottom } = chartArea;
+        const { top, bottom, right } = chartArea;
         const x = scales.x;
 
         const xPos11 = x.getPixelForValue(11);
@@ -394,7 +424,11 @@ const dualPhaseDividerPlugin = {
         const splitX = (xPos11 + xPos12) / 2;
 
         ctx.save();
-        // 1. Vertical dashed divider line
+        // 1. Subtle forecast region backdrop tint (from splitX to right)
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.025)';
+        ctx.fillRect(splitX, top, right - splitX, bottom - top);
+
+        // 2. Vertical dashed divider line
         ctx.beginPath();
         ctx.setLineDash([5, 4]);
         ctx.strokeStyle = 'rgba(4, 120, 87, 0.55)';
@@ -403,7 +437,7 @@ const dualPhaseDividerPlugin = {
         ctx.lineTo(splitX, bottom);
         ctx.stroke();
 
-        // 2. "TODAY | 2026 FORWARD" badge pill
+        // 3. "TODAY | 2026 FORWARD" badge pill
         const badgeText = 'TODAY | 2026 FORWARD';
         ctx.font = '700 10px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
         const textMetrics = ctx.measureText(badgeText);
@@ -414,13 +448,13 @@ const dualPhaseDividerPlugin = {
 
         ctx.setLineDash([]);
         ctx.fillStyle = '#047857';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-        ctx.shadowBlur = 4;
+        ctx.shadowColor = 'rgba(4, 120, 87, 0.25)';
+        ctx.shadowBlur = 6;
         ctx.shadowOffsetY = 2;
 
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(pillX, pillY, pillW, pillH, 4);
+            ctx.roundRect(pillX, pillY, pillW, pillH, 5);
         } else {
             ctx.rect(pillX, pillY, pillW, pillH);
         }
@@ -436,7 +470,7 @@ const dualPhaseDividerPlugin = {
     }
 };
 
-// Custom Chart.js Plugin for Vertical Crosshair Cursor Guide on Hover
+// Custom Chart.js Plugin for Sleek Crosshair Tracking & Glowing Hover Anchor (Image #25 aesthetic)
 const crosshairGuidePlugin = {
     id: 'crosshairGuide',
     afterDraw(chart) {
@@ -444,17 +478,53 @@ const crosshairGuidePlugin = {
             const activePoint = chart.tooltip._active[0];
             const ctx = chart.ctx;
             const x = activePoint.element.x;
+            const y = activePoint.element.y;
             const topY = chart.chartArea.top;
             const bottomY = chart.chartArea.bottom;
+            const leftX = chart.chartArea.left;
+            const rightX = chart.chartArea.right;
 
             ctx.save();
+
+            // 1. Vertical cursor line
             ctx.beginPath();
             ctx.setLineDash([4, 4]);
             ctx.moveTo(x, topY);
             ctx.lineTo(x, bottomY);
             ctx.lineWidth = 1.2;
-            ctx.strokeStyle = 'rgba(4, 120, 87, 0.40)';
+            ctx.strokeStyle = 'rgba(4, 120, 87, 0.45)';
             ctx.stroke();
+
+            // 2. Faint horizontal cursor guide for precision rate reading
+            ctx.beginPath();
+            ctx.setLineDash([3, 3]);
+            ctx.moveTo(leftX, y);
+            ctx.lineTo(rightX, y);
+            ctx.lineWidth = 1.0;
+            ctx.strokeStyle = 'rgba(4, 120, 87, 0.22)';
+            ctx.stroke();
+
+            // 3. Glowing focal point ring (Image #25 financial style)
+            const pointColor = activePoint.element.options.borderColor || activePoint.element.options.backgroundColor || '#047857';
+
+            // Outer glow halo
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(x, y, 7.5, 0, Math.PI * 2);
+            ctx.fillStyle = pointColor;
+            ctx.globalAlpha = 0.25;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+
+            // Inner solid white circle with sharp border
+            ctx.beginPath();
+            ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = pointColor;
+            ctx.stroke();
+
             ctx.restore();
         }
     }
@@ -489,6 +559,7 @@ async function renderChart(data, routeFilter) {
             return d;
         });
 
+        const ctx = canvas.getContext('2d');
         const datasets = [];
 
         if (routeFilter === 'ALL') {
@@ -511,33 +582,39 @@ async function renderChart(data, routeFilter) {
                     projData[i + 12] = parseFloat((projRaw[i] * mult).toFixed(2));
                 }
 
+                const routeShortName = val.label.split('→')[0].trim();
+
                 datasets.push({
-                    label: `${val.label.split('→')[0].trim()} (2025 Actual)`,
+                    label: `${routeShortName} (2025 Actual)`,
                     data: histData,
                     borderColor: color.border,
                     backgroundColor: color.bg,
-                    borderWidth: 2.2,
+                    borderWidth: 2.4,
+                    hoverBorderWidth: 4.2,
                     borderDash: [],
-                    pointRadius: 2.5,
-                    pointHoverRadius: 5,
+                    pointRadius: 1.5,
+                    pointHoverRadius: 6.5,
                     pointBackgroundColor: color.border,
                     pointBorderColor: '#ffffff',
-                    tension: 0.35,
+                    pointBorderWidth: 2,
+                    tension: 0.38,
                     fill: false
                 });
 
                 datasets.push({
-                    label: `${val.label.split('→')[0].trim()} (2026 Projected)`,
+                    label: `${routeShortName} (2026 Projected)`,
                     data: projData,
                     borderColor: color.proj || color.border,
                     backgroundColor: color.bg,
-                    borderWidth: 2.2,
+                    borderWidth: 2.4,
+                    hoverBorderWidth: 4.2,
                     borderDash: [6, 4],
-                    pointRadius: 2.5,
-                    pointHoverRadius: 5,
+                    pointRadius: 1.5,
+                    pointHoverRadius: 6.5,
                     pointBackgroundColor: color.proj || color.border,
                     pointBorderColor: '#ffffff',
-                    tension: 0.35,
+                    pointBorderWidth: 2,
+                    tension: 0.38,
                     fill: false
                 });
             }
@@ -571,19 +648,32 @@ async function renderChart(data, routeFilter) {
                 p10Data[i + 12] = parseFloat((p10Raw[i] * mult).toFixed(2));
             }
 
+            // Elegant background gradient under historical actuals (Image #25 aesthetic)
+            let bgGradient2025 = color.bg;
+            if (ctx) {
+                const g25 = ctx.createLinearGradient(0, 0, 0, 320);
+                g25.addColorStop(0, 'rgba(4, 120, 87, 0.18)');
+                g25.addColorStop(0.7, 'rgba(4, 120, 87, 0.04)');
+                g25.addColorStop(1, 'rgba(4, 120, 87, 0.00)');
+                bgGradient2025 = g25;
+            }
+
             // 1. 2025 Actuals (Solid)
             datasets.push({
                 label: `${val.label} (2025 Actuals)`,
                 data: histData,
                 borderColor: '#047857',
-                borderWidth: 3,
+                borderWidth: 3.2,
+                hoverBorderWidth: 4.5,
                 borderDash: [],
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                pointRadius: 2.5,
+                pointHoverRadius: 7.5,
                 pointBackgroundColor: '#047857',
                 pointBorderColor: '#ffffff',
-                tension: 0.35,
-                fill: false
+                pointBorderWidth: 2,
+                tension: 0.38,
+                fill: true,
+                backgroundColor: bgGradient2025
             });
 
             // 2. 2026 Forward Projections (Dashed)
@@ -591,26 +681,28 @@ async function renderChart(data, routeFilter) {
                 label: `${val.label} (2026 Forward Flow)`,
                 data: projData,
                 borderColor: '#10b981',
-                borderWidth: 3,
+                borderWidth: 3.2,
+                hoverBorderWidth: 4.5,
                 borderDash: [6, 4],
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                pointRadius: 2.5,
+                pointHoverRadius: 7.5,
                 pointBackgroundColor: '#10b981',
                 pointBorderColor: '#ffffff',
-                tension: 0.35,
+                pointBorderWidth: 2,
+                tension: 0.38,
                 fill: false
             });
 
             // 3. P90 Upper Envelope (Index 2)
             datasets.push({
-                label: 'P90 Upper Bound',
+                label: 'P90 Statistical Ceiling',
                 data: p90Data,
-                borderColor: 'rgba(16, 185, 129, 0.40)',
+                borderColor: 'rgba(16, 185, 129, 0.45)',
                 borderWidth: 1.5,
-                borderDash: [3, 3],
+                borderDash: [4, 4],
                 pointRadius: 0,
                 pointHoverRadius: 0,
-                tension: 0.35,
+                tension: 0.38,
                 fill: false
             });
 
@@ -618,18 +710,17 @@ async function renderChart(data, routeFilter) {
             datasets.push({
                 label: 'P10–P90 Confidence Envelope',
                 data: p10Data,
-                borderColor: 'rgba(16, 185, 129, 0.40)',
+                borderColor: 'rgba(16, 185, 129, 0.45)',
                 borderWidth: 1.5,
-                borderDash: [3, 3],
+                borderDash: [4, 4],
                 pointRadius: 0,
                 pointHoverRadius: 0,
-                tension: 0.35,
+                tension: 0.38,
                 fill: '-1',
-                backgroundColor: 'rgba(4, 120, 87, 0.10)'
+                backgroundColor: 'rgba(4, 120, 87, 0.09)'
             });
         }
 
-        const ctx = canvas.getContext('2d');
         predictionsChartInstance = new Chart(ctx, {
             type: 'line',
             data: { labels: monthLabels, datasets: datasets },
@@ -637,81 +728,116 @@ async function renderChart(data, routeFilter) {
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                interaction: { mode: 'index', intersect: false },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'xy',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    axis: 'xy',
+                    intersect: false
+                },
                 plugins: {
                     legend: {
                         display: routeFilter === 'ALL',
                         position: 'top',
-                        labels: { boxWidth: 12, font: { size: 11, weight: '600' }, color: '#0f3d32' }
+                        align: 'end',
+                        labels: {
+                            boxWidth: 12,
+                            boxHeight: 4,
+                            usePointStyle: false,
+                            font: { size: 11, weight: '600', family: 'Inter, sans-serif' },
+                            color: '#0f3d32',
+                            padding: 12
+                        }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(10, 76, 57, 0.96)',
+                        enabled: true,
+                        mode: 'nearest',
+                        axis: 'xy',
+                        intersect: false,
+                        backgroundColor: 'rgba(6, 44, 34, 0.96)',
                         titleColor: '#ffffff',
                         bodyColor: '#e2edea',
-                        borderColor: '#188a68',
+                        borderColor: '#10b981',
                         borderWidth: 1.2,
-                        padding: 12,
-                        cornerRadius: 6,
+                        padding: { top: 10, bottom: 10, left: 14, right: 14 },
+                        cornerRadius: 8,
+                        displayColors: true,
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        boxPadding: 4,
+                        usePointStyle: true,
                         titleFont: { size: 12, weight: '700', family: 'Inter, sans-serif' },
-                        bodyFont: { size: 11.5, weight: '500', family: 'Inter, sans-serif' },
-                        footerFont: { size: 10.5, weight: '600', family: 'Inter, sans-serif' },
+                        bodyFont: { size: 12, weight: '600', family: 'Inter, sans-serif' },
+                        footerFont: { size: 10.5, weight: '500', family: 'Inter, sans-serif' },
                         footerColor: '#a7f3d0',
+                        footerMarginTop: 6,
                         filter: function(tooltipItem) {
                             return tooltipItem.parsed.y !== null && !isNaN(tooltipItem.parsed.y);
                         },
                         callbacks: {
                             title: function(tooltipItems) {
                                 if (!tooltipItems || !tooltipItems.length) return '';
-                                const idx = tooltipItems[0].dataIndex;
-                                const label = tooltipItems[0].label;
-                                if (idx < 12) {
-                                    return `${label} • 2025 Historical Actual`;
-                                } else {
-                                    return `${label} • 2026 Forward Flow Projection`;
-                                }
+                                const item = tooltipItems[0];
+                                const idx = item.dataIndex;
+                                const label = item.label;
+                                return idx < 12
+                                    ? `${label} • 2025 Historical Benchmark`
+                                    : `${label} • 2026 Forward Trajectory`;
                             },
                             label: function(context) {
                                 if (context.parsed.y === null || isNaN(context.parsed.y)) return '';
-                                const label = context.dataset.label;
+                                const rawLabel = context.dataset.label || '';
                                 const rate = context.parsed.y.toFixed(2);
-                                const inr = Math.round(context.parsed.y * currentInr).toLocaleString();
-                                return `  ${label}: $${rate}/MT (≈ ₹${inr}/MT)`;
+                                const inr = Math.round(context.parsed.y * currentInr).toLocaleString('en-IN');
+                                return `  ${rawLabel}: $${rate}/MT (≈ ₹${inr}/MT)`;
                             },
                             footer: function(tooltipItems) {
                                 if (!tooltipItems || !tooltipItems.length) return '';
-                                const idx = tooltipItems[0].dataIndex;
+                                const item = tooltipItems[0];
+                                const idx = item.dataIndex;
                                 const vClass = activeVesselClass || 'Capesize';
-                                if (idx >= 12) {
-                                    return `Vessel: ${vClass} (${mult.toFixed(2)}x) • 90% Statistical Band Active`;
-                                }
-                                return `Vessel: ${vClass} (${mult.toFixed(2)}x) • Verified Port Spot Actual`;
+                                return idx >= 12
+                                    ? `Vessel: ${vClass} (${mult.toFixed(2)}x) • ±90% Confidence Envelope`
+                                    : `Vessel: ${vClass} (${mult.toFixed(2)}x) • Verified Port Spot Fixture`;
                             }
                         }
                     }
                 },
                 scales: {
                     x: {
-                        grid: { color: 'rgba(212, 226, 223, 0.6)' },
+                        grid: {
+                            color: 'rgba(212, 226, 223, 0.45)',
+                            borderColor: 'rgba(212, 226, 223, 0.8)'
+                        },
                         ticks: {
-                            font: { weight: '600', size: 10.5 },
+                            font: { weight: '600', size: 10.5, family: 'Inter, sans-serif' },
                             color: '#4a6b63',
                             maxRotation: 0,
                             autoSkip: true,
-                            maxTicksLimit: 24
+                            maxTicksLimit: 24,
+                            padding: 6
                         }
                     },
                     y: {
                         title: {
                             display: true,
                             text: 'Freight Rate (USD / MT)',
-                            font: { size: 12, weight: '700' },
-                            color: '#0a4c39'
+                            font: { size: 11.5, weight: '700', family: 'Inter, sans-serif' },
+                            color: '#0a4c39',
+                            padding: { bottom: 8 }
                         },
-                        grid: { color: 'rgba(212, 226, 223, 0.6)' },
+                        grid: {
+                            color: 'rgba(212, 226, 223, 0.45)',
+                            borderColor: 'rgba(212, 226, 223, 0.8)'
+                        },
                         ticks: {
                             callback: value => `$${parseFloat(value.toFixed(2))}`,
-                            font: { weight: '600', size: 10.5 },
-                            color: '#4a6b63'
+                            font: { weight: '600', size: 10.5, family: 'Inter, sans-serif' },
+                            color: '#4a6b63',
+                            padding: 8
                         }
                     }
                 }
@@ -721,6 +847,22 @@ async function renderChart(data, routeFilter) {
         // High-definition Native Canvas Fallback (Zero external dependencies)
         renderNativeCanvasChart(canvas, data, routeFilter);
     }
+}
+
+// Helper for smooth Bezier curve drawing on native canvas
+function drawSmoothCurve(ctx, pts) {
+    if (!pts || pts.length === 0) return;
+    if (pts.length === 1) {
+        ctx.moveTo(pts[0].x, pts[0].y);
+        return;
+    }
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 0; i < pts.length - 1; i++) {
+        const xc = (pts[i].x + pts[i + 1].x) / 2;
+        const yc = (pts[i].y + pts[i + 1].y) / 2;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+    }
+    ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
 }
 
 function renderNativeCanvasChart(canvas, data, routeFilter) {
@@ -897,12 +1039,9 @@ function renderNativeCanvasChart(canvas, data, routeFilter) {
 
         ctx.save();
         ctx.beginPath();
-        ctx.moveTo(histPts[0].x, histPts[0].y);
-        for (let i = 1; i < histPts.length; i++) {
-            ctx.lineTo(histPts[i].x, histPts[i].y);
-        }
+        drawSmoothCurve(ctx, histPts);
         ctx.strokeStyle = color.border;
-        ctx.lineWidth = routeFilter === 'ALL' ? 2.2 : 3;
+        ctx.lineWidth = routeFilter === 'ALL' ? 2.4 : 3.2;
         ctx.stroke();
 
         // 2025 Points
@@ -926,12 +1065,9 @@ function renderNativeCanvasChart(canvas, data, routeFilter) {
         ctx.save();
         ctx.beginPath();
         ctx.setLineDash([5, 4]);
-        ctx.moveTo(projPts[0].x, projPts[0].y);
-        for (let i = 1; i < projPts.length; i++) {
-            ctx.lineTo(projPts[i].x, projPts[i].y);
-        }
+        drawSmoothCurve(ctx, projPts);
         ctx.strokeStyle = color.proj || color.border;
-        ctx.lineWidth = routeFilter === 'ALL' ? 2.2 : 3;
+        ctx.lineWidth = routeFilter === 'ALL' ? 2.4 : 3.2;
         ctx.stroke();
 
         // 2026 Points
