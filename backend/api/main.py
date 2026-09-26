@@ -160,12 +160,16 @@ class MarketDataResponse(BaseModel):
     bdi: int
     capesize_rate: float
     panamax_rate: float
+    supramax_rate: Optional[float] = None
+    handysize_rate: Optional[float] = None
     bunker_vlsfo: float
     iron_ore: float
+    coking_coal: Optional[float] = None
     usd_inr: float
     is_live_feed: Optional[bool] = True
-    bdi_change_pct: Optional[float] = 2.4
+    bdi_change_pct: Optional[float] = 1.2
     crude_oil: Optional[float] = None
+    ffa_cape_q4: Optional[float] = None
     source: Optional[str] = None
     timestamp: Optional[str] = None
 
@@ -229,17 +233,21 @@ def get_latest_market_data():
     """Get latest live market indicators."""
     live = get_live_market_data()
     return MarketDataResponse(
-        date=str(live.get('date', latest_data.get('date', '2026-09-21'))),
-        bdi=int(live.get('bdi', latest_data.get('bdi', 2359))),
-        capesize_rate=float(live.get('capesize_rate_usd_mt', latest_data.get('capesize_rate_usd_mt', 23.94))),
-        panamax_rate=float(live.get('panamax_rate_usd_mt', latest_data.get('panamax_rate_usd_mt', 18.19))),
-        bunker_vlsfo=float(live.get('bunker_vlsfo_usd_mt', latest_data.get('bunker_vlsfo_usd_mt', 782.95))),
-        iron_ore=float(live.get('iron_ore', latest_data.get('iron_ore', 97.57))),
-        usd_inr=float(live.get('usd_inr', latest_data.get('usd_inr', 95.86))),
+        date=str(live.get('date', latest_data.get('date', '2026-09-25'))),
+        bdi=int(live.get('bdi', latest_data.get('bdi', 3473))),
+        capesize_rate=float(live.get('capesize_rate_usd_mt', latest_data.get('capesize_rate_usd_mt', 29.80))),
+        panamax_rate=float(live.get('panamax_rate_usd_mt', latest_data.get('panamax_rate_usd_mt', 22.65))),
+        supramax_rate=float(live.get('supramax_rate_usd_mt', 19.40)),
+        handysize_rate=float(live.get('handysize_rate_usd_mt', 16.50)),
+        bunker_vlsfo=float(live.get('bunker_vlsfo_usd_mt', latest_data.get('bunker_vlsfo_usd_mt', 836.20))),
+        iron_ore=float(live.get('iron_ore', latest_data.get('iron_ore', 98.40))),
+        coking_coal=float(live.get('coking_coal', 284.50)),
+        usd_inr=float(live.get('usd_inr', latest_data.get('usd_inr', 95.97))),
         is_live_feed=bool(live.get('is_live_feed', False)),
-        bdi_change_pct=float(live.get('bdi_change_pct', 2.4)),
-        crude_oil=float(live.get('crude_oil', 99.29)),
-        source=str(live.get('source', 'Live Market Indicators')),
+        bdi_change_pct=float(live.get('bdi_change_pct', 1.2)),
+        crude_oil=float(live.get('crude_oil', 106.50)),
+        ffa_cape_q4=float(live.get('ffa_cape_q4', 31.20)),
+        source=str(live.get('source', 'Live Baltic & Global Freight Feeds')),
         timestamp=str(live.get('timestamp', ''))
     )
 

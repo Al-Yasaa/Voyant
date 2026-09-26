@@ -35,6 +35,174 @@
         </div>
     </header>
 
+    <!-- Real-Time Financial Stock Ticker Ribbon -->
+    <div class="market-ticker-wrapper" id="market-ticker-bar" title="Live Baltic Exchange & Global Commodity Freight Rates">
+        <div class="ticker-fixed-label">
+            <span class="ticker-live-dot"></span>
+            <span class="ticker-label-text">MARKETS LIVE</span>
+        </div>
+        <div class="ticker-viewport">
+            <div class="ticker-track">
+                <!-- Group 1 -->
+                <div class="ticker-group" id="ticker-group-1">
+                    <div class="ticker-item">
+                        <span class="ticker-sym">BDI</span>
+                        <span class="ticker-val" id="ticker-bdi">3,473</span>
+                        <span class="ticker-chg positive" id="ticker-bdi-chg">+1.2%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">CAPESIZE 5TC</span>
+                        <span class="ticker-val" id="ticker-cape">$29.80</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-cape-chg">+1.8%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">PANAMAX 4TC</span>
+                        <span class="ticker-val" id="ticker-panamax">$22.65</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-panamax-chg">+1.1%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">SUPRAMAX 10TC</span>
+                        <span class="ticker-val" id="ticker-supramax">$19.40</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-supramax-chg">+0.7%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">HANDYSIZE 38k</span>
+                        <span class="ticker-val" id="ticker-handysize">$16.50</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-handysize-chg">+0.4%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">VLSFO BUNKER</span>
+                        <span class="ticker-val" id="ticker-bunker">$836.20</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-bunker-chg">+0.9%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">BRENT CRUDE</span>
+                        <span class="ticker-val" id="ticker-crude">$106.50</span>
+                        <span class="ticker-sub">/bbl</span>
+                        <span class="ticker-chg positive" id="ticker-crude-chg">+0.8%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">MET COKING COAL</span>
+                        <span class="ticker-val" id="ticker-coal">$284.50</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg neutral" id="ticker-coal-chg">FOB Aus</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">IRON ORE 62%</span>
+                        <span class="ticker-val" id="ticker-iron">$98.40</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-iron-chg">+1.5%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">USD/INR</span>
+                        <span class="ticker-val" id="ticker-inr">₹95.97</span>
+                        <span class="ticker-chg neutral" id="ticker-inr-chg">RBI Ref</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">FFA CAPE Q4</span>
+                        <span class="ticker-val" id="ticker-ffa">$31.20</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-ffa-chg">BULLISH</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                </div>
+                <!-- Group 2 (Duplicate for Seamless Loop) -->
+                <div class="ticker-group" id="ticker-group-2">
+                    <div class="ticker-item">
+                        <span class="ticker-sym">BDI</span>
+                        <span class="ticker-val" id="ticker-bdi-2">3,473</span>
+                        <span class="ticker-chg positive" id="ticker-bdi-chg-2">+1.2%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">CAPESIZE 5TC</span>
+                        <span class="ticker-val" id="ticker-cape-2">$29.80</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-cape-chg-2">+1.8%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">PANAMAX 4TC</span>
+                        <span class="ticker-val" id="ticker-panamax-2">$22.65</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-panamax-chg-2">+1.1%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">SUPRAMAX 10TC</span>
+                        <span class="ticker-val" id="ticker-supramax-2">$19.40</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-supramax-chg-2">+0.7%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">HANDYSIZE 38k</span>
+                        <span class="ticker-val" id="ticker-handysize-2">$16.50</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-handysize-chg-2">+0.4%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">VLSFO BUNKER</span>
+                        <span class="ticker-val" id="ticker-bunker-2">$836.20</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-bunker-chg-2">+0.9%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">BRENT CRUDE</span>
+                        <span class="ticker-val" id="ticker-crude-2">$106.50</span>
+                        <span class="ticker-sub">/bbl</span>
+                        <span class="ticker-chg positive" id="ticker-crude-chg-2">+0.8%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">MET COKING COAL</span>
+                        <span class="ticker-val" id="ticker-coal-2">$284.50</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg neutral" id="ticker-coal-chg-2">FOB Aus</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">IRON ORE 62%</span>
+                        <span class="ticker-val" id="ticker-iron-2">$98.40</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-iron-chg-2">+1.5%</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">USD/INR</span>
+                        <span class="ticker-val" id="ticker-inr-2">₹95.97</span>
+                        <span class="ticker-chg neutral" id="ticker-inr-chg-2">RBI Ref</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                    <div class="ticker-item">
+                        <span class="ticker-sym">FFA CAPE Q4</span>
+                        <span class="ticker-val" id="ticker-ffa-2">$31.20</span>
+                        <span class="ticker-sub">/MT</span>
+                        <span class="ticker-chg positive" id="ticker-ffa-chg-2">BULLISH</span>
+                    </div>
+                    <span class="ticker-sep">•</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="main-content">
         <div class="container dashboard-container">
@@ -43,53 +211,14 @@
                 <!-- Left Main Content Area (Scrolls) -->
                 <div class="dashboard-main">
 
-                    <!-- Market Overview Cards -->
-                    <section class="market-overview">
-                        <h2 class="section-title">Market Overview</h2>
-                        <div class="card-grid">
-                            <div class="metric-card">
-                                <div class="metric-icon">📊</div>
-                                <div class="metric-content">
-                                    <span class="metric-label">Baltic Dry Index</span>
-                                    <span class="metric-value" id="bdi-value">--</span>
-                                    <span class="metric-change positive" id="bdi-change">--</span>
-                                </div>
-                            </div>
-
-                            <div class="metric-card">
-                                <div class="metric-icon">⚓</div>
-                                <div class="metric-content">
-                                    <span class="metric-label">Capesize Rate</span>
-                                    <span class="metric-value" id="cape-rate">--</span>
-                                    <span class="metric-subtext">USD/MT</span>
-                                </div>
-                            </div>
-
-                            <div class="metric-card">
-                                <div class="metric-icon">🛢️</div>
-                                <div class="metric-content">
-                                    <span class="metric-label">Bunker VLSFO</span>
-                                    <span class="metric-value" id="bunker-price">--</span>
-                                    <span class="metric-subtext">USD/MT</span>
-                                </div>
-                            </div>
-
-                            <div class="metric-card">
-                                <div class="metric-icon">💱</div>
-                                <div class="metric-content">
-                                    <span class="metric-label">USD/INR</span>
-                                    <span class="metric-value" id="usd-inr">--</span>
-                                    <span class="metric-subtext">Exchange Rate</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Dual-Phase 2025-2026 Predictions Chart -->
-                    <section class="predictions-section">
+                    <!-- Dual-Phase 2025-2026 Predictions Chart (Prominent Centerpiece Highlight) -->
+                    <section class="predictions-section forecaster-highlight">
                         <div class="predictions-header">
                             <div>
-                                <h2 class="section-title" style="margin-bottom: 4px;">Dual-Phase Multi-Factor Freight Rate Forecaster</h2>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                                    <h2 class="section-title" style="margin-bottom: 0;">Dual-Phase Multi-Factor Freight Rate Forecaster</h2>
+                                    <span class="pred-badge pred-badge-hero">PRIMARY FORECASTER</span>
+                                </div>
                                 <p class="predictions-subtitle">Calibrated on 2006–2026 Baltic Dry Index & East Coast commodity flows | 2025 Historical Actuals (Solid) & 2026 Forward Projections (Dashed) with P10–P90 Confidence Bounds</p>
                             </div>
                             <div class="predictions-badges">

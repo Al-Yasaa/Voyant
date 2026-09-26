@@ -159,6 +159,177 @@ body {
     backdrop-filter: blur(4px);
 }
 
+/* ==============================================================================
+   Horizontal Financial Stock Ticker Marquee Ribbon
+   ============================================================================== */
+.market-ticker-wrapper {
+    background: #062820;
+    border-bottom: 1px solid #134e40;
+    border-top: 1px solid #041f18;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(6, 40, 32, 0.12);
+    width: 100%;
+    z-index: 15;
+}
+
+.ticker-fixed-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #094735 0%, #0d5943 100%);
+    color: #a7f3d0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 0 16px;
+    height: 100%;
+    border-right: 1px solid #134e40;
+    z-index: 10;
+    flex-shrink: 0;
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.25);
+    user-select: none;
+}
+
+.ticker-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulseDot 1.8s infinite;
+}
+
+.ticker-viewport {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    mask-image: linear-gradient(to right, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
+}
+
+.ticker-track {
+    display: flex;
+    width: max-content;
+    animation: tickerScroll 42s linear infinite;
+    will-change: transform;
+}
+
+.ticker-track:hover {
+    animation-play-state: paused;
+}
+
+.ticker-group {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    font-size: 12.5px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+    cursor: default;
+    transition: opacity 0.2s;
+}
+
+.ticker-sym {
+    font-weight: 700;
+    color: #9cc4bb;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+}
+
+.ticker-val {
+    font-weight: 800;
+    color: #ffffff;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ticker-sub {
+    font-size: 11px;
+    color: #6e9a90;
+    font-weight: 500;
+    margin-left: -2px;
+}
+
+.ticker-chg {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1.5px 5.5px;
+    border-radius: 4px;
+    letter-spacing: 0.2px;
+}
+
+.ticker-chg.positive {
+    background: rgba(16, 185, 129, 0.18);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.ticker-chg.negative {
+    background: rgba(239, 68, 68, 0.18);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.ticker-chg.neutral {
+    background: rgba(148, 163, 184, 0.16);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    font-weight: 600;
+}
+
+.ticker-sep {
+    color: #1e5a4d;
+    font-size: 12px;
+    padding: 0 4px;
+    opacity: 0.6;
+    user-select: none;
+}
+
+@keyframes tickerScroll {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes pulseDot {
+    0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 6px #10b981; }
+    50% { transform: scale(1.25); opacity: 0.75; box-shadow: 0 0 12px #34d399; }
+}
+
+/* Forecaster Centerpiece Highlight */
+.predictions-section.forecaster-highlight {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--primary);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 4px 16px rgba(10, 76, 57, 0.08);
+    margin-bottom: 35px;
+}
+
+.pred-badge-hero {
+    background: #094735;
+    color: #a7f3d0;
+    border: 1px solid #134e40;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    font-size: 11px;
+    padding: 4px 8px;
+}
+
 /* Main Content */
 .main-content {
     padding: 30px 0;

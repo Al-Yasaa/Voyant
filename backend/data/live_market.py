@@ -165,7 +165,9 @@ def get_live_market_data(force_refresh: bool = False) -> Dict[str, Any]:
         "bunker_vlsfo_usd_mt": 836.20,
         "crude_oil": 106.50,
         "iron_ore": 98.40,
+        "coking_coal": 284.50,
         "usd_inr": 95.97,
+        "ffa_cape_q4": 31.20,
         "source": "Live Baltic & Global Freight Feeds"
     }
 
