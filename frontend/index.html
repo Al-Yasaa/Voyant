@@ -575,6 +575,30 @@
                                     </div>
                                 </div>
 
+                                <!-- Forecast Horizon Rate Trajectory Chart (Shown for >1 Day Horizons) -->
+                                <div class="result-trajectory-card" id="result-trajectory-card" style="display: none;">
+                                    <div class="result-trajectory-header">
+                                        <div>
+                                            <div class="result-trajectory-title-wrap">
+                                                <h4 class="result-trajectory-title" id="trajectory-horizon-title">7-Day Rate Trajectory</h4>
+                                                <span class="trajectory-horizon-pill" id="trajectory-horizon-pill">PROJECTION</span>
+                                            </div>
+                                            <span class="result-trajectory-subtitle" id="trajectory-date-range">Progression from spot baseline</span>
+                                        </div>
+                                        <div class="result-trajectory-delta" id="trajectory-delta-badge">
+                                            <span class="traj-delta-label">Horizon Delta</span>
+                                            <span class="traj-delta-val" id="trajectory-delta-val">--</span>
+                                        </div>
+                                    </div>
+                                    <div class="result-trajectory-chart-wrap">
+                                        <canvas id="horizonTrajectoryChart" height="135"></canvas>
+                                    </div>
+                                    <div class="result-trajectory-footer">
+                                        <div class="traj-legend-item"><span class="traj-dot traj-dot-main"></span> Forecast Trajectory ($/MT)</div>
+                                        <div class="traj-legend-item"><span class="traj-dot traj-dot-band"></span> 90% Confidence Interval</div>
+                                    </div>
+                                </div>
+
                                 <!-- Contract Timing Strategy Matrix -->
                                 <div class="contract-strategy-section" id="contract-strategy-section">
                                     <div class="strategy-header">

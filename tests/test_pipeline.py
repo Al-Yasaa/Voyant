@@ -99,5 +99,44 @@ class TestModelTrainingAndPrediction:
         assert prediction["confidence_interval_lower"] < rate < prediction["confidence_interval_upper"]
 
 
+    def test_forecast_trajectory_endpoint(self):
+        """Verify multi-day forecast endpoint returns trajectory while 1-day does not."""
+        from fastapi.testclient import TestClient
+        from backend.api.main import app
+
+        client = TestClient(app)
+
+        # Test 1-day forecast (should have forecast_trajectory as None)
+        res_1day = client.post("/api/forecast", json={
+            "origin": "Australia_HayPoint",
+            "destination": "Paradip",
+            "vessel_class": "Capesize",
+            "cargo_volume_mt": 170000,
+            "forecast_days": 1
+        })
+        assert res_1day.status_code == 200
+        data_1day = res_1day.json()
+        assert data_1day.get("forecast_trajectory") is None
+
+        # Test 7-day forecast (should have 8 trajectory points: day 0 to day 7)
+        res_7day = client.post("/api/forecast", json={
+            "origin": "Australia_HayPoint",
+            "destination": "Paradip",
+            "vessel_class": "Capesize",
+            "cargo_volume_mt": 170000,
+            "forecast_days": 7
+        })
+        assert res_7day.status_code == 200
+        data_7day = res_7day.json()
+        traj = data_7day.get("forecast_trajectory")
+        assert traj is not None
+        assert len(traj) == 8
+        assert traj[0]["day"] == 0
+        assert traj[-1]["day"] == 7
+        assert traj[0]["rate_usd_mt"] > 0
+        assert traj[-1]["rate_usd_mt"] == data_7day["predicted_freight_rate_usd_mt"]
+        assert traj[0]["confidence_lower_p10"] < traj[0]["rate_usd_mt"] < traj[0]["confidence_upper_p90"]
+
+
 if __name__ == "__main__":
     pytest.main(["-v", __file__])

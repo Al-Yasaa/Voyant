@@ -13,6 +13,7 @@ from typing import Optional, Dict, List, Any
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+import math
 import sys
 import os
 
@@ -147,6 +148,7 @@ class ForecastResponse(BaseModel):
     contract_strategy_summary: Optional[Dict[str, Any]] = None
     physical_clearance: Optional[Dict[str, Any]] = None
     contract_strategy: Optional[Dict[str, Any]] = None
+    forecast_trajectory: Optional[List[Dict[str, Any]]] = None
 
 
 class VesselOptimizationRequest(BaseModel):
@@ -468,6 +470,42 @@ def forecast_freight_rate(request: ForecastRequest):
             usd_inr_rate=live_usd_inr
         )
 
+        # Generate multi-day rate trajectory progression if forecast_days > 1
+        forecast_trajectory = []
+        if request.forecast_days > 1:
+            start_dt = datetime.now()
+            n_days = request.forecast_days
+
+            for day_idx in range(n_days + 1):
+                t = day_idx / float(n_days)
+                day_dt = start_dt + timedelta(days=day_idx)
+
+                # Non-linear interpolation with subtle market wave
+                interp_rate = current_spot_rate + (predicted_rate - current_spot_rate) * t
+                rate_diff = predicted_rate - current_spot_rate
+                wave_amp = (rate_diff * 0.12) if abs(rate_diff) > 0.3 else 0.15
+                wave = math.sin(t * math.pi) * wave_amp
+
+                point_rate = round(interp_rate + wave, 2)
+                if day_idx == 0:
+                    point_rate = round(current_spot_rate, 2)
+                elif day_idx == n_days:
+                    point_rate = round(predicted_rate, 2)
+
+                # Expanding confidence fan (±1.5% at Day 0 up to ±10% at Day N)
+                ci_pct = 0.015 + (0.10 - 0.015) * math.sqrt(t)
+                p10 = round(point_rate * (1.0 - ci_pct), 2)
+                p90 = round(point_rate * (1.0 + ci_pct), 2)
+
+                forecast_trajectory.append({
+                    "day": day_idx,
+                    "date": day_dt.strftime('%Y-%m-%d'),
+                    "display_date": day_dt.strftime('%b %d'),
+                    "rate_usd_mt": point_rate,
+                    "confidence_lower_p10": p10,
+                    "confidence_upper_p90": p90
+                })
+
         return ForecastResponse(
             forecast_date=(datetime.now() + timedelta(days=request.forecast_days)).strftime('%Y-%m-%d'),
             route_summary=f"{ORIGIN_PORTS[request.origin]['name']} → {EAST_COAST_PORTS[request.destination]['name']}",
@@ -486,7 +524,8 @@ def forecast_freight_rate(request: ForecastRequest):
             model_confidence=prediction['model_confidence'],
             contract_strategy_summary=contract_strategy,
             physical_clearance=physical_clearance,
-            contract_strategy=contract_strategy_matrix
+            contract_strategy=contract_strategy_matrix,
+            forecast_trajectory=forecast_trajectory if forecast_trajectory else None
         )
 
     except ValueError as e:

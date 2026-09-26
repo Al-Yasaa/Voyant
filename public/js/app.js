@@ -58,6 +58,15 @@ const lighterage = document.getElementById('lighterage');
 const savingsInfo = document.getElementById('savings-info');
 const savingsText = document.getElementById('savings-text');
 
+// DOM Elements - Forecast Horizon Rate Trajectory
+const resultTrajectoryCard = document.getElementById('result-trajectory-card');
+const trajectoryHorizonTitle = document.getElementById('trajectory-horizon-title');
+const trajectoryHorizonPill = document.getElementById('trajectory-horizon-pill');
+const trajectoryDateRange = document.getElementById('trajectory-date-range');
+const trajectoryDeltaBadge = document.getElementById('trajectory-delta-badge');
+const trajectoryDeltaVal = document.getElementById('trajectory-delta-val');
+let horizonTrajectoryChartInstance = null;
+
 // DOM Elements - Port Clearance
 const portClearanceBox = document.getElementById('port-clearance-box');
 const clearanceOverallBadge = document.getElementById('clearance-overall-badge');
@@ -1943,6 +1952,9 @@ function displayResults(data) {
     // Contract Timing Strategy Matrix
     renderContractStrategy(data);
 
+    // Forecast Horizon Rate Trajectory Chart (Multi-Day Horizons)
+    renderTrajectoryChart(data);
+
     // Voyage Details
     const v = data.voyage_details;
     voyageDistance.textContent = `${v.distance_nm.toLocaleString()} nm`;
@@ -2067,6 +2079,291 @@ function renderContractStrategy(data) {
             </div>
         `;
     }
+}
+
+function renderTrajectoryChart(data) {
+    if (!resultTrajectoryCard) return;
+
+    const traj = data.forecast_trajectory;
+    const days = parseInt(forecastDaysSelect ? forecastDaysSelect.value : (data.forecast_days || 1));
+
+    // Single-Day Suppression Rule: Hide if 1-day forecast or trajectory data unavailable
+    if (!traj || traj.length <= 1 || days <= 1) {
+        resultTrajectoryCard.style.display = 'none';
+        if (horizonTrajectoryChartInstance) {
+            horizonTrajectoryChartInstance.destroy();
+            horizonTrajectoryChartInstance = null;
+        }
+        return;
+    }
+
+    // Show trajectory card
+    resultTrajectoryCard.style.display = 'block';
+
+    // Set Horizon Title and Pill
+    let horizonLabel = `${days}-Day Rate Trajectory`;
+    let pillLabel = `${days}D FORECAST`;
+    if (days === 7) {
+        horizonLabel = '7-Day Rate Trajectory';
+        pillLabel = '1 WEEK';
+    } else if (days === 30) {
+        horizonLabel = '30-Day Rate Trajectory';
+        pillLabel = '1 MONTH';
+    } else if (days === 90) {
+        horizonLabel = '90-Day Rate Trajectory';
+        pillLabel = '3 MONTHS';
+    }
+
+    if (trajectoryHorizonTitle) trajectoryHorizonTitle.textContent = horizonLabel;
+    if (trajectoryHorizonPill) trajectoryHorizonPill.textContent = pillLabel;
+
+    // Calculate progression delta from Day 0 (Spot) to Day N
+    const spotRate = traj[0].rate_usd_mt;
+    const finalRate = traj[traj.length - 1].rate_usd_mt;
+    const delta = finalRate - spotRate;
+    const deltaPct = spotRate > 0 ? (delta / spotRate) * 100 : 0;
+
+    if (trajectoryDateRange) {
+        trajectoryDateRange.textContent = `${traj[0].display_date} ($${spotRate.toFixed(2)}) → ${traj[traj.length - 1].display_date} ($${finalRate.toFixed(2)})`;
+    }
+
+    if (trajectoryDeltaVal) {
+        const sign = delta >= 0 ? '+' : '';
+        trajectoryDeltaVal.textContent = `${sign}$${delta.toFixed(2)} (${sign}${deltaPct.toFixed(1)}%)`;
+        trajectoryDeltaVal.className = 'traj-delta-val ' + (delta > 0.05 ? 'traj-delta-bullish' : (delta < -0.05 ? 'traj-delta-bearish' : 'traj-delta-neutral'));
+    }
+
+    // Render Canvas / Chart.js
+    const canvas = document.getElementById('horizonTrajectoryChart');
+    if (!canvas) return;
+
+    if (horizonTrajectoryChartInstance) {
+        horizonTrajectoryChartInstance.destroy();
+        horizonTrajectoryChartInstance = null;
+    }
+
+    const labels = traj.map(p => p.display_date);
+    const mainRates = traj.map(p => p.rate_usd_mt);
+    const p90Rates = traj.map(p => p.confidence_upper_p90);
+    const p10Rates = traj.map(p => p.confidence_lower_p10);
+
+    if (typeof Chart !== 'undefined') {
+        const ctx = canvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 130);
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.22)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.00)');
+
+        horizonTrajectoryChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Forecast Trajectory ($/MT)',
+                        data: mainRates,
+                        borderColor: '#10b981',
+                        borderWidth: 2.2,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: traj.length > 35 ? 0 : (traj.length > 15 ? 2 : 3.5),
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1.5,
+                        order: 1
+                    },
+                    {
+                        label: '90% Upper Bound (P90)',
+                        data: p90Rates,
+                        borderColor: 'rgba(16, 185, 129, 0.45)',
+                        borderWidth: 1.2,
+                        borderDash: [4, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.35,
+                        order: 2
+                    },
+                    {
+                        label: '90% Lower Bound (P10)',
+                        data: p10Rates,
+                        borderColor: 'rgba(16, 185, 129, 0.45)',
+                        borderWidth: 1.2,
+                        borderDash: [4, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.35,
+                        order: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#0c1a16',
+                        titleColor: '#e2e8f0',
+                        bodyColor: '#a7f3d0',
+                        borderColor: 'rgba(16, 185, 129, 0.3)',
+                        borderWidth: 1,
+                        padding: 8,
+                        displayColors: false,
+                        callbacks: {
+                            title: function(items) {
+                                const idx = items[0].dataIndex;
+                                const item = traj[idx];
+                                return `Day ${item.day} • ${item.display_date} (${item.date})`;
+                            },
+                            label: function(item) {
+                                if (item.datasetIndex === 0) {
+                                    const val = item.raw;
+                                    const inrVal = (val * 83.2).toFixed(0);
+                                    return `Rate: $${val.toFixed(2)}/MT (₹${inrVal}/MT)`;
+                                } else if (item.datasetIndex === 1) {
+                                    const low = p10Rates[item.dataIndex];
+                                    const high = item.raw;
+                                    return `90% CI: $${low.toFixed(2)} - $${high.toFixed(2)}/MT`;
+                                }
+                                return null;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: { size: 9.5, weight: '500' },
+                            maxTicksLimit: 6,
+                            maxRotation: 0
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.04)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: { size: 9.5, weight: '500' },
+                            callback: function(val) {
+                                return '$' + val.toFixed(1);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        // Native HTML5 Canvas Fallback Renderer
+        renderNativeTrajectoryCanvas(canvas, traj);
+    }
+}
+
+function renderNativeTrajectoryCanvas(canvas, traj) {
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width = canvas.parentElement.clientWidth || 300;
+    const height = canvas.height = 135;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const padLeft = 45;
+    const padRight = 15;
+    const padTop = 15;
+    const padBottom = 25;
+    const plotW = width - padLeft - padRight;
+    const plotH = height - padTop - padBottom;
+
+    const rates = traj.map(t => t.rate_usd_mt);
+    const p10s = traj.map(t => t.confidence_lower_p10);
+    const p90s = traj.map(t => t.confidence_upper_p90);
+    const allVals = [...rates, ...p10s, ...p90s];
+
+    const minVal = Math.min(...allVals) * 0.98;
+    const maxVal = Math.max(...allVals) * 1.02;
+    const range = (maxVal - minVal) || 1;
+
+    const getX = (idx) => padLeft + (idx / (traj.length - 1)) * plotW;
+    const getY = (val) => padTop + plotH - ((val - minVal) / range) * plotH;
+
+    // Draw Grid Lines
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 3; i++) {
+        const y = padTop + (plotH / 3) * i;
+        ctx.beginPath();
+        ctx.moveTo(padLeft, y);
+        ctx.lineTo(width - padRight, y);
+        ctx.stroke();
+
+        const v = maxVal - (range / 3) * i;
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '9px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`$${v.toFixed(1)}`, padLeft - 6, y + 3);
+    }
+
+    // Draw Confidence Interval Band
+    ctx.beginPath();
+    for (let i = 0; i < traj.length; i++) {
+        const x = getX(i);
+        const y = getY(p90s[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    for (let i = traj.length - 1; i >= 0; i--) {
+        const x = getX(i);
+        const y = getY(p10s[i]);
+        ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+    ctx.fill();
+
+    // Draw Main Line
+    ctx.beginPath();
+    for (let i = 0; i < traj.length; i++) {
+        const x = getX(i);
+        const y = getY(rates[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+
+    // Draw endpoints
+    [0, traj.length - 1].forEach(idx => {
+        const x = getX(idx);
+        const y = getY(rates[idx]);
+        ctx.beginPath();
+        ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#10b981';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    });
+
+    // Draw X-axis labels (Start and End)
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '9.5px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(traj[0].display_date, padLeft, height - 6);
+    ctx.textAlign = 'right';
+    ctx.fillText(traj[traj.length - 1].display_date, width - padRight, height - 6);
 }
 
 function renderRouteIntelAlert(data) {
